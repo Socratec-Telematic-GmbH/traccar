@@ -31,7 +31,7 @@ import org.traccar.storage.query.Request;
 import java.util.List;
 import java.util.ArrayList;
 
-@Path("logbooks")
+@Path("logbook")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
 public class LogbookEntryResource extends BaseObjectResource<LogbookEntry> {
@@ -60,7 +60,41 @@ public class LogbookEntryResource extends BaseObjectResource<LogbookEntry> {
     }
 
     @POST
-    public Response add(List<LogbookEntry> entries) throws Exception {
+    public Response add(LogbookEntry entry) throws Exception {
+        // Restrict to service users only
+        if (getUserId() != ServiceAccountUser.ID) {
+            return Response.status(Response.Status.FORBIDDEN)
+                    .entity("{\"error\": \"Access denied: Service account required\"}")
+                    .build();
+        }
+
+        // Input validation
+        if (entry == null) {
+            return Response.status(Response.Status.BAD_REQUEST)
+                    .entity("{\"error\": \"Entry cannot be null.\"}")
+                    .build();
+        }
+
+        try {
+            validateCreateInput(entry);
+            permissionsService.checkPermission(Device.class, getUserId(), entry.getDeviceId());
+
+            processEntryDefaults(entry);
+            entry.setId(storage.addObject(entry, new Request(new Columns.Exclude("id"))));
+
+            actionLogger.create(request, getUserId(), entry);
+
+            return Response.ok(entry).build();
+        } catch (Exception e) {
+            return Response.status(Response.Status.BAD_REQUEST)
+                    .entity("{\"error\": \"" + e.getMessage() + "\"}")
+                    .build();
+        }
+    }
+
+    @POST
+    @Path("bulk")
+    public Response addBulk(List<LogbookEntry> entries) throws Exception {
         // Restrict to service users only
         if (getUserId() != ServiceAccountUser.ID) {
             return Response.status(Response.Status.FORBIDDEN)
