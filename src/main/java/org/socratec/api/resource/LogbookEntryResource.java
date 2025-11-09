@@ -16,6 +16,7 @@ import jakarta.ws.rs.core.Response;
 import org.socratec.model.LogbookEntry;
 import org.socratec.model.LogbookEntryResult;
 import org.socratec.model.LogbookEntriesResult;
+import org.socratec.model.LogbookEntryType;
 import org.traccar.api.BaseObjectResource;
 import org.traccar.api.security.ServiceAccountUser;
 import org.traccar.helper.LogAction;
@@ -207,7 +208,7 @@ public class LogbookEntryResource extends BaseObjectResource<LogbookEntry> {
 
         // Set default type if not provided
         if (entity.getType() == null) {
-            entity.setType(org.socratec.model.LogbookEntryType.NONE);
+            entity.setType(LogbookEntryType.BUSINESS);
         }
     }
 
