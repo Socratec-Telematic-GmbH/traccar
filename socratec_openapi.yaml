@@ -667,7 +667,7 @@ paths:
       description: |
         Updates ONLY the type and notes fields of a LogbookEntry for trip classification and annotation.
         All other fields in the request body are ignored and remain unchanged.
-        This endpoint is used to classify trips as NONE (0), BUSINESS (1), or PRIVATE (2) and add notes.
+        This endpoint is used to classify trips as BUSINESS (1) or PRIVATE (2) and add notes.
       tags:
         - Reports
       parameters:
@@ -735,7 +735,7 @@ paths:
         '400':
           description: |
             Bad request. This can occur when:
-            - Invalid type value (must be 0, 1, or 2)
+            - Invalid type value (must be 1 or 2)
             - Missing required 'type' field in request body
             - Invalid request format
           content:
@@ -745,7 +745,7 @@ paths:
                 properties:
                   error:
                     type: string
-                    example: "Invalid type value. Must be 0 (NONE), 1 (BUSINESS), or 2 (PRIVATE)"
+                    example: "Invalid type value. Must be 1 (BUSINESS) or 2 (PRIVATE)"
         '404':
           description: LogbookEntry not found
           content: {}
@@ -1376,10 +1376,9 @@ components:
       description: |
         Enum representing the type/classification of a logbook entry.
         Used to categorize trips for business reporting and tax purposes.
-      enum: [0, 1, 2]
-      x-enum-varnames: [NONE, BUSINESS, PRIVATE]
+      enum: [1, 2]
+      x-enum-varnames: [BUSINESS, PRIVATE]
       x-enum-descriptions:
-        - "NONE (0): Unclassified or default entry type"
         - "BUSINESS (1): Business-related trip"
         - "PRIVATE (2): Private/personal trip"
       example: 1
