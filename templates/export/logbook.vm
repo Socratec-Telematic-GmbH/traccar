@@ -250,9 +250,9 @@
 </head>
 <body>
     <div class="header">
-        <h1>Logbook Report</h1>
+        <h1>Fahrtenbuch</h1>
         <div class="period">
-            Period: $dateTool.format("yyyy-MM-dd HH:mm", $from, $locale, $timezone) - $dateTool.format("yyyy-MM-dd HH:mm", $to, $locale, $timezone)
+            Periode: $dateTool.format("yyyy-MM-dd HH:mm", $from, $locale, $timezone) - $dateTool.format("yyyy-MM-dd HH:mm", $to, $locale, $timezone)
         </div>
     </div>
 
@@ -269,12 +269,12 @@
         <div class="summary" style="margin-bottom: 10px;">
             <div class="summary-section">
                 <div class="summary-row">
-                    <span class="summary-label">Total Entries: $deviceSection.objects.size()</span>
+                    <span class="summary-label">Anzahl Einträge: $deviceSection.objects.size()</span>
                 </div>
             </div>
             <div class="summary-section">
                 <div class="summary-row">
-                    <span class="summary-label">Total Distance:</span>
+                    <span class="summary-label">Distanz total:</span>
                     <span class="summary-value">
                         #if($distanceUnit.equals("mi"))
                             $numberTool.format('#0.##', $deviceSection.totalDistance * 0.000621371) mi
@@ -286,7 +286,7 @@
                     </span>
                 </div>
                 <div class="summary-row">
-                    <span class="summary-label">Business Distance:</span>
+                    <span class="summary-label">Distanz geschäftlich:</span>
                     <span class="summary-value">
                         #if($distanceUnit.equals("mi"))
                             $numberTool.format('#0.##', $deviceSection.businessDistance * 0.000621371) mi
@@ -298,7 +298,7 @@
                     </span>
                 </div>
                 <div class="summary-row">
-                    <span class="summary-label">Private Distance:</span>
+                    <span class="summary-label">Distanz privat:</span>
                     <span class="summary-value">
                         #if($distanceUnit.equals("mi"))
                             $numberTool.format('#0.##', $deviceSection.privateDistance * 0.000621371) mi
@@ -313,7 +313,7 @@
             
             <div class="summary-section">
                 <div class="summary-row">
-                    <span class="summary-label">Total Duration:</span>
+                    <span class="summary-label">Dauer total:</span>
                     <span class="summary-value">
                         #set($totalSeconds = $math.div($deviceSection.totalDuration, 1000).intValue())
                         #set($totalHours = $math.div($totalSeconds, 3600).intValue())
@@ -323,7 +323,7 @@
                     </span>
                 </div>
                 <div class="summary-row">
-                    <span class="summary-label">Business Duration:</span>
+                    <span class="summary-label">Dauer geschäftlich:</span>
                     <span class="summary-value">
                         #set($businessSeconds = $math.div($deviceSection.businessDuration, 1000).intValue())
                         #set($businessHours = $math.div($businessSeconds, 3600).intValue())
@@ -333,7 +333,7 @@
                     </span>
                 </div>
                 <div class="summary-row">
-                    <span class="summary-label">Private Duration:</span>
+                    <span class="summary-label">Dauer privat:</span>
                     <span class="summary-value">
                         #set($privateSeconds = $math.div($deviceSection.privateDuration, 1000).intValue())
                         #set($privateHours = $math.div($privateSeconds, 3600).intValue())
@@ -349,17 +349,17 @@
         <table class="entries-table">
             <thead>
                 <tr>
-                    <th>Start Time</th>
-                    <th>End Time</th>
-                    <th>Start Address</th>
-                    <th>End Address</th>
-                    <th>Distance ($distanceUnit)</th>
-                    <th>Duration</th>
-                    <th>Avg Speed ($speedUnit)</th>
-                    <th>Max Speed ($speedUnit)</th>
-                    <th>Fuel ($volumeUnit)</th>
-                    <th>Type</th>
-                    <th>Notes</th>
+                    <th>Start</th>
+                    <th>Ende</th>
+                    <th>Start Adresse</th>
+                    <th>Ende Adresse</th>
+                    <th>Distanz ($distanceUnit)</th>
+                    <th>Dauer</th>
+                    <th>Durchschnittsgeschwindigkeit ($speedUnit)</th>
+                    <th>Höchstgeschwindigkeit ($speedUnit)</th>
+                    <th>Kraftstoffverbrauch ($volumeUnit)</th>
+                    <th>Typ</th>
+                    <th>Notiz</th>
                 </tr>
             </thead>
             <tbody>
@@ -405,7 +405,7 @@
     #end
     
     <div class="footer">
-        Generated on $dateTool.format("yyyy-MM-dd HH:mm:ss", $dateTool.getDate(), $locale, $timezone)
+        Generiert am $dateTool.format("yyyy-MM-dd HH:mm:ss", $dateTool.getDate(), $locale, $timezone)
     </div>
 </body>
 </html>
