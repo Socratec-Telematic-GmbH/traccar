@@ -17,7 +17,11 @@ import org.traccar.storage.query.Request;
 import org.socratec.model.LogbookEntry;
 import org.socratec.model.LogbookEntryType;
 
+import com.itextpdf.html2pdf.ConverterProperties;
 import com.itextpdf.html2pdf.HtmlConverter;
+import com.itextpdf.kernel.geom.PageSize;
+import com.itextpdf.kernel.pdf.PdfDocument;
+import com.itextpdf.kernel.pdf.PdfWriter;
 import jakarta.inject.Inject;
 import org.apache.velocity.app.VelocityEngine;
 
@@ -128,8 +132,18 @@ public class LogbookReportProvider {
         velocityEngine.getTemplate("logbook.vm").merge(velocityContext, writer);
         String htmlContent = writer.toString();
 
-        // Convert HTML to PDF
-        HtmlConverter.convertToPdf(htmlContent, outputStream);
+        // Create PDF document with landscape orientation
+        PdfWriter pdfWriter = new PdfWriter(outputStream);
+        PdfDocument pdfDocument = new PdfDocument(pdfWriter);
+        pdfDocument.setDefaultPageSize(PageSize.A4.rotate());
+
+        // Configure converter properties
+        ConverterProperties converterProperties = new ConverterProperties();
+
+        // Convert HTML to PDF with landscape orientation
+        HtmlConverter.convertToPdf(htmlContent, pdfDocument, converterProperties);
+
+        pdfDocument.close();
     }
 
     private ArrayList<LogbookReportSection> createLogbookReportSections(

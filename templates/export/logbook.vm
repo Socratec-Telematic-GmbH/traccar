@@ -133,45 +133,45 @@
             background-color: #f9f9f9;
         }
         
-        /* Define specific column widths for 11-column table - Total: exactly 100% */
+        /* Define specific column widths for 13-column table - Total: exactly 100% */
         .entries-table th:nth-child(1),
         .entries-table td:nth-child(1) {
-            width: 9%;
+            width: 8%;
         }
         
         .entries-table th:nth-child(2),
         .entries-table td:nth-child(2) {
-            width: 9%;
+            width: 8%;
         }
         
         .entries-table th:nth-child(3),
         .entries-table td:nth-child(3) {
-            width: 12%;
+            width: 10%;
         }
         
         .entries-table th:nth-child(4),
         .entries-table td:nth-child(4) {
-            width: 12%;
+            width: 10%;
         }
         
         .entries-table th:nth-child(5),
         .entries-table td:nth-child(5) {
-            width: 9%;
+            width: 8%;
         }
         
         .entries-table th:nth-child(6),
         .entries-table td:nth-child(6) {
-            width: 9%;
+            width: 8%;
         }
         
         .entries-table th:nth-child(7),
         .entries-table td:nth-child(7) {
-            width: 9%;
+            width: 8%;
         }
         
         .entries-table th:nth-child(8),
         .entries-table td:nth-child(8) {
-            width: 9%;
+            width: 7%;
         }
         
         .entries-table th:nth-child(9),
@@ -181,12 +181,22 @@
         
         .entries-table th:nth-child(10),
         .entries-table td:nth-child(10) {
-            width: 7%;
+            width: 8%;
         }
         
         .entries-table th:nth-child(11),
         .entries-table td:nth-child(11) {
             width: 7%;
+        }
+        
+        .entries-table th:nth-child(12),
+        .entries-table td:nth-child(12) {
+            width: 6%;
+        }
+        
+        .entries-table th:nth-child(13),
+        .entries-table td:nth-child(13) {
+            width: 6%;
         }
         
         .date-time {
@@ -353,6 +363,8 @@
                     <th>Ende</th>
                     <th>Start Adresse</th>
                     <th>Ende Adresse</th>
+                    <th>Kilometerstand Start ($distanceUnit)</th>
+                    <th>Kilometerstand Ende ($distanceUnit)</th>
                     <th>Distanz ($distanceUnit)</th>
                     <th>Dauer</th>
                     <th>Durchschnittsgeschwindigkeit ($speedUnit)</th>
@@ -369,6 +381,24 @@
                     <td class="date-time">$dateTool.format("yyyy-MM-dd HH:mm", $entry.endTime, $locale, $timezone)</td>
                     <td class="address">#if($entry.startAddress)$entry.startAddress#else-#end</td>
                     <td class="address">#if($entry.endAddress)$entry.endAddress#else-#end</td>
+                    <td class="number">
+                        #if($distanceUnit.equals("mi"))
+                            $numberTool.format('#0.##', $entry.startOdometer * 0.000621371)
+                        #elseif($distanceUnit.equals("nmi"))
+                            $numberTool.format('#0.##', $entry.startOdometer * 0.000539957)
+                        #else
+                            $numberTool.format('#0.##', $entry.startOdometer * 0.001)
+                        #end
+                    </td>
+                    <td class="number">
+                        #if($distanceUnit.equals("mi"))
+                            $numberTool.format('#0.##', $entry.endOdometer * 0.000621371)
+                        #elseif($distanceUnit.equals("nmi"))
+                            $numberTool.format('#0.##', $entry.endOdometer * 0.000539957)
+                        #else
+                            $numberTool.format('#0.##', $entry.endOdometer * 0.001)
+                        #end
+                    </td>
                     <td class="number">
                         #if($distanceUnit.equals("mi"))
                             $numberTool.format('#0.##', $entry.distance * 0.000621371)
