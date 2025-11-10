@@ -19,7 +19,6 @@ import org.socratec.model.LogbookEntryType;
 
 import com.itextpdf.html2pdf.HtmlConverter;
 import jakarta.inject.Inject;
-import org.apache.velocity.VelocityContext;
 import org.apache.velocity.app.VelocityEngine;
 
 import java.io.File;
@@ -119,20 +118,10 @@ public class LogbookReportProvider {
         velocityEngine.init();
 
         // Create Velocity Context using reportUtils for consistency
-        var jxlsContext = reportUtils.initializeContext(userId);
-        VelocityContext velocityContext = new VelocityContext();
-
-        // Transfer relevant variables from JXLS context to Velocity context
+        var velocityContext = reportUtils.initializeVelocityContext(userId);
         velocityContext.put("devices", devicesLogbook);
         velocityContext.put("from", from);
         velocityContext.put("to", to);
-        velocityContext.put("distanceUnit", jxlsContext.getVar("distanceUnit"));
-        velocityContext.put("speedUnit", jxlsContext.getVar("speedUnit"));
-        velocityContext.put("volumeUnit", jxlsContext.getVar("volumeUnit"));
-        velocityContext.put("timezone", jxlsContext.getVar("timezone"));
-        velocityContext.put("locale", jxlsContext.getVar("locale"));
-        velocityContext.put("dateTool", jxlsContext.getVar("dateTool"));
-        velocityContext.put("numberTool", jxlsContext.getVar("numberTool"));
 
         // Process template
         StringWriter writer = new StringWriter();
