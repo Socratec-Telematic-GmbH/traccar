@@ -1,0 +1,441 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Logbook Report</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+            font-size: 12px;
+            color: #333;
+        }
+        
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+            border-bottom: 2px solid #333;
+            padding-bottom: 10px;
+        }
+        
+        .header h1 {
+            margin: 0;
+            font-size: 24px;
+            color: #333;
+        }
+        
+        .header .period {
+            margin: 10px 0;
+            font-size: 14px;
+            color: #666;
+        }
+        
+        .device-section {
+            margin-bottom: 40px;
+            page-break-inside: avoid;
+        }
+        
+        .device-header {
+            background-color: #f5f5f5;
+            padding: 10px;
+            margin-bottom: 15px;
+            border-left: 4px solid #007bff;
+        }
+        
+        .device-header h2 {
+            margin: 0;
+            font-size: 18px;
+            color: #333;
+        }
+        
+        .device-info {
+            font-size: 12px;
+            color: #666;
+            margin-top: 5px;
+        }
+        
+        .summary {
+            background-color: #f8f9fa;
+            padding: 15px;
+            margin-bottom: 15px;
+            border-radius: 4px;
+            display: table;
+            width: 100%;
+            table-layout: fixed;
+        }
+        
+        .summary-section {
+            display: table-cell;
+            width: 50%;
+            padding-right: 15px;
+            vertical-align: top;
+        }
+        
+        .summary-section:last-child {
+            padding-right: 0;
+        }
+        
+        .summary-section h3 {
+            margin: 0 0 10px 0;
+            font-size: 14px;
+            color: #333;
+            border-bottom: 1px solid #ddd;
+            padding-bottom: 5px;
+        }
+        
+        .summary-row {
+            margin-bottom: 8px;
+            display: table;
+            width: 100%;
+        }
+        
+        .summary-label {
+            font-weight: bold;
+            color: #333;
+            display: table-cell;
+            width: 60%;
+        }
+        
+        .summary-value {
+            font-weight: normal;
+            color: #666;
+            text-align: right;
+            display: table-cell;
+            width: 40%;
+        }
+        
+        .entries-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 10px;
+            table-layout: fixed;
+            box-sizing: border-box;
+        }
+        
+        .entries-table th,
+        .entries-table td {
+            border: 1px solid #ddd;
+            padding: 6px;
+            text-align: left;
+            font-size: 9px;
+            overflow: hidden;
+            word-wrap: break-word;
+        }
+        
+        .entries-table th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+            color: #333;
+        }
+        
+        .entries-table tr:nth-child(even) {
+            background-color: #f9f9f9;
+        }
+        
+        /* Define specific column widths for 13-column table - Total: exactly 100% */
+        .entries-table th:nth-child(1),
+        .entries-table td:nth-child(1) {
+            width: 8%;
+        }
+        
+        .entries-table th:nth-child(2),
+        .entries-table td:nth-child(2) {
+            width: 8%;
+        }
+        
+        .entries-table th:nth-child(3),
+        .entries-table td:nth-child(3) {
+            width: 10%;
+        }
+        
+        .entries-table th:nth-child(4),
+        .entries-table td:nth-child(4) {
+            width: 10%;
+        }
+        
+        .entries-table th:nth-child(5),
+        .entries-table td:nth-child(5) {
+            width: 8%;
+        }
+        
+        .entries-table th:nth-child(6),
+        .entries-table td:nth-child(6) {
+            width: 8%;
+        }
+        
+        .entries-table th:nth-child(7),
+        .entries-table td:nth-child(7) {
+            width: 8%;
+        }
+        
+        .entries-table th:nth-child(8),
+        .entries-table td:nth-child(8) {
+            width: 7%;
+        }
+        
+        .entries-table th:nth-child(9),
+        .entries-table td:nth-child(9) {
+            width: 8%;
+        }
+        
+        .entries-table th:nth-child(10),
+        .entries-table td:nth-child(10) {
+            width: 8%;
+        }
+        
+        .entries-table th:nth-child(11),
+        .entries-table td:nth-child(11) {
+            width: 7%;
+        }
+        
+        .entries-table th:nth-child(12),
+        .entries-table td:nth-child(12) {
+            width: 6%;
+        }
+        
+        .entries-table th:nth-child(13),
+        .entries-table td:nth-child(13) {
+            width: 6%;
+        }
+        
+        .date-time {
+            white-space: normal;
+            font-size: 8px;
+            line-height: 1.2;
+        }
+        
+        .address {
+            word-wrap: break-word;
+            font-size: 8px;
+            line-height: 1.2;
+        }
+        
+        .number {
+            text-align: right;
+            font-size: 8px;
+        }
+        
+        .duration {
+            text-align: center;
+            font-size: 8px;
+        }
+        
+        .type-cell {
+            text-align: center;
+            font-size: 8px;
+        }
+        
+        .notes-cell {
+            font-size: 8px;
+            line-height: 1.2;
+        }
+        
+        .no-entries {
+            text-align: center;
+            color: #666;
+            font-style: italic;
+            padding: 20px;
+        }
+        
+        .footer {
+            margin-top: 30px;
+            padding-top: 10px;
+            border-top: 1px solid #ddd;
+            text-align: center;
+            font-size: 10px;
+            color: #666;
+        }
+        
+        .page-break {
+            page-break-before: always;
+        }
+        
+        @media print {
+            .device-section {
+                page-break-inside: avoid;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>Fahrtenbuch</h1>
+        <div class="period">
+            Periode: $dateTool.format("yyyy-MM-dd HH:mm", $from, $locale, $timezone) - $dateTool.format("yyyy-MM-dd HH:mm", $to, $locale, $timezone)
+        </div>
+    </div>
+
+    #foreach($deviceSection in $devices)
+    <div class="device-section">
+        <div class="device-header">
+            <h2>$deviceSection.deviceName</h2>
+            #if($deviceSection.groupName && $deviceSection.groupName != "")
+            <div class="device-info">Group: $deviceSection.groupName</div>
+            #end
+        </div>
+        
+        <!-- Total Entries Section - Full Width -->
+        <div class="summary" style="margin-bottom: 10px;">
+            <div class="summary-section">
+                <div class="summary-row">
+                    <span class="summary-label">Anzahl Einträge: $deviceSection.objects.size()</span>
+                </div>
+            </div>
+            <div class="summary-section">
+                <div class="summary-row">
+                    <span class="summary-label">Distanz total:</span>
+                    <span class="summary-value">
+                        #if($distanceUnit.equals("mi"))
+                            $numberTool.format('#0.##', $deviceSection.totalDistance * 0.000621371) mi
+                        #elseif($distanceUnit.equals("nmi"))
+                            $numberTool.format('#0.##', $deviceSection.totalDistance * 0.000539957) nmi
+                        #else
+                            $numberTool.format('#0.##', $deviceSection.totalDistance * 0.001) km
+                        #end
+                    </span>
+                </div>
+                <div class="summary-row">
+                    <span class="summary-label">Distanz geschäftlich:</span>
+                    <span class="summary-value">
+                        #if($distanceUnit.equals("mi"))
+                            $numberTool.format('#0.##', $deviceSection.businessDistance * 0.000621371) mi
+                        #elseif($distanceUnit.equals("nmi"))
+                            $numberTool.format('#0.##', $deviceSection.businessDistance * 0.000539957) nmi
+                        #else
+                            $numberTool.format('#0.##', $deviceSection.businessDistance * 0.001) km
+                        #end
+                    </span>
+                </div>
+                <div class="summary-row">
+                    <span class="summary-label">Distanz privat:</span>
+                    <span class="summary-value">
+                        #if($distanceUnit.equals("mi"))
+                            $numberTool.format('#0.##', $deviceSection.privateDistance * 0.000621371) mi
+                        #elseif($distanceUnit.equals("nmi"))
+                            $numberTool.format('#0.##', $deviceSection.privateDistance * 0.000539957) nmi
+                        #else
+                            $numberTool.format('#0.##', $deviceSection.privateDistance * 0.001) km
+                        #end
+                    </span>
+                </div>
+            </div>
+            
+            <div class="summary-section">
+                <div class="summary-row">
+                    <span class="summary-label">Dauer total:</span>
+                    <span class="summary-value">
+                        #set($totalSeconds = $math.div($deviceSection.totalDuration, 1000).intValue())
+                        #set($totalHours = $math.div($totalSeconds, 3600).intValue())
+                        #set($remainingSeconds = $totalSeconds % 3600)
+                        #set($totalMinutes = $math.div($remainingSeconds, 60).intValue())
+                        ${numberTool.format('00', $totalHours)} h ${numberTool.format('00', $totalMinutes)} min
+                    </span>
+                </div>
+                <div class="summary-row">
+                    <span class="summary-label">Dauer geschäftlich:</span>
+                    <span class="summary-value">
+                        #set($businessSeconds = $math.div($deviceSection.businessDuration, 1000).intValue())
+                        #set($businessHours = $math.div($businessSeconds, 3600).intValue())
+                        #set($remainingSeconds = $businessSeconds % 3600)
+                        #set($businessMinutes = $math.div($remainingSeconds, 60).intValue())
+                        ${numberTool.format('00', $businessHours)} h ${numberTool.format('00', $businessMinutes)} min
+                    </span>
+                </div>
+                <div class="summary-row">
+                    <span class="summary-label">Dauer privat:</span>
+                    <span class="summary-value">
+                        #set($privateSeconds = $math.div($deviceSection.privateDuration, 1000).intValue())
+                        #set($privateHours = $math.div($privateSeconds, 3600).intValue())
+                        #set($remainingSeconds = $privateSeconds % 3600)
+                        #set($privateMinutes = $math.div($remainingSeconds, 60).intValue())
+                        ${numberTool.format('00', $privateHours)} h ${numberTool.format('00', $privateMinutes)} min
+                    </span>
+                </div>
+            </div>
+        </div>
+        
+        #if($deviceSection.objects.size() > 0)
+        <table class="entries-table">
+            <thead>
+                <tr>
+                    <th>Start</th>
+                    <th>Ende</th>
+                    <th>Start Adresse</th>
+                    <th>Ende Adresse</th>
+                    <th>Kilometerstand Start ($distanceUnit)</th>
+                    <th>Kilometerstand Ende ($distanceUnit)</th>
+                    <th>Distanz ($distanceUnit)</th>
+                    <th>Dauer</th>
+                    <th>Durchschnittsgeschwindigkeit ($speedUnit)</th>
+                    <th>Höchstgeschwindigkeit ($speedUnit)</th>
+                    <th>Kraftstoffverbrauch ($volumeUnit)</th>
+                    <th>Typ</th>
+                    <th>Notiz</th>
+                </tr>
+            </thead>
+            <tbody>
+                #foreach($entry in $deviceSection.objects)
+                <tr>
+                    <td class="date-time">$dateTool.format("yyyy-MM-dd HH:mm", $entry.startTime, $locale, $timezone)</td>
+                    <td class="date-time">$dateTool.format("yyyy-MM-dd HH:mm", $entry.endTime, $locale, $timezone)</td>
+                    <td class="address">#if($entry.startAddress)$entry.startAddress#else-#end</td>
+                    <td class="address">#if($entry.endAddress)$entry.endAddress#else-#end</td>
+                    <td class="number">
+                        #if($distanceUnit.equals("mi"))
+                            $numberTool.format('#0.##', $entry.startOdometer * 0.000621371)
+                        #elseif($distanceUnit.equals("nmi"))
+                            $numberTool.format('#0.##', $entry.startOdometer * 0.000539957)
+                        #else
+                            $numberTool.format('#0.##', $entry.startOdometer * 0.001)
+                        #end
+                    </td>
+                    <td class="number">
+                        #if($distanceUnit.equals("mi"))
+                            $numberTool.format('#0.##', $entry.endOdometer * 0.000621371)
+                        #elseif($distanceUnit.equals("nmi"))
+                            $numberTool.format('#0.##', $entry.endOdometer * 0.000539957)
+                        #else
+                            $numberTool.format('#0.##', $entry.endOdometer * 0.001)
+                        #end
+                    </td>
+                    <td class="number">
+                        #if($distanceUnit.equals("mi"))
+                            $numberTool.format('#0.##', $entry.distance * 0.000621371)
+                        #elseif($distanceUnit.equals("nmi"))
+                            $numberTool.format('#0.##', $entry.distance * 0.000539957)
+                        #else
+                            $numberTool.format('#0.##', $entry.distance * 0.001)
+                        #end
+                    </td>
+                    <td class="duration">
+                        #set($entrySeconds = $math.div($entry.duration, 1000).intValue())
+                        #set($entryHours = $math.div($entrySeconds, 3600).intValue())
+                        #set($remainingSeconds = $entrySeconds % 3600)
+                        #set($entryMinutes = $math.div($remainingSeconds, 60).intValue())
+                        ${numberTool.format('00', $entryHours)}h${numberTool.format('00', $entryMinutes)}min
+                    </td>
+                    <td class="number">$numberTool.format('#0.0', $entry.averageSpeed)</td>
+                    <td class="number">$numberTool.format('#0.0', $entry.maxSpeed)</td>
+                    <td class="number">#if($entry.spentFuel > 0)$numberTool.format('#0.00', $entry.spentFuel)#else-#end</td>
+                    <td class="type-cell">#if($entry.type)$entry.type#else-#end</td>
+                    <td class="notes-cell">#if($entry.notes)$entry.notes#else-#end</td>
+                </tr>
+                #end
+            </tbody>
+        </table>
+        #else
+        <div class="no-entries">No logbook entries found for this period.</div>
+        #end
+    </div>
+    
+    #if($foreach.hasNext)
+    <div class="page-break"></div>
+    #end
+    #end
+    
+    <div class="footer">
+        Generiert am $dateTool.format("yyyy-MM-dd HH:mm:ss", $dateTool.getDate(), $locale, $timezone)
+    </div>
+</body>
+</html>

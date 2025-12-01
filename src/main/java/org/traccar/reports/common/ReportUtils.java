@@ -18,8 +18,10 @@ package org.traccar.reports.common;
 
 import jakarta.annotation.Nullable;
 import jakarta.inject.Inject;
+import org.apache.velocity.VelocityContext;
 import org.apache.velocity.app.VelocityEngine;
 import org.apache.velocity.tools.generic.DateTool;
+import org.apache.velocity.tools.generic.MathTool;
 import org.apache.velocity.tools.generic.NumberTool;
 import org.jxls.area.Area;
 import org.jxls.builder.xls.XlsCommentAreaBuilder;
@@ -400,4 +402,19 @@ public class ReportUtils {
         return result;
     }
 
+    public VelocityContext initializeVelocityContext(long userId) throws StorageException {
+        var server = permissionsService.getServer();
+        var user = permissionsService.getUser(userId);
+
+        VelocityContext velocityContext = new VelocityContext();
+        velocityContext.put("distanceUnit", UserUtil.getDistanceUnit(server, user));
+        velocityContext.put("speedUnit", UserUtil.getSpeedUnit(server, user));
+        velocityContext.put("volumeUnit", UserUtil.getVolumeUnit(server, user));
+        velocityContext.put("timezone", UserUtil.getTimezone(server, user));
+        velocityContext.put("locale", Locale.getDefault());
+        velocityContext.put("dateTool", new DateTool());
+        velocityContext.put("numberTool", new NumberTool());
+        velocityContext.put("math", new MathTool());
+        return velocityContext;
+    }
 }
