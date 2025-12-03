@@ -2,7 +2,6 @@ package org.socratec.api.resource;
 
 import jakarta.inject.Inject;
 import jakarta.servlet.http.HttpServletRequest;
-import jakarta.ws.rs.Consumes;
 import jakarta.ws.rs.GET;
 import jakarta.ws.rs.PUT;
 import jakarta.ws.rs.POST;
@@ -10,10 +9,12 @@ import jakarta.ws.rs.DELETE;
 import jakarta.ws.rs.Path;
 import jakarta.ws.rs.Produces;
 import jakarta.ws.rs.PathParam;
+import jakarta.ws.rs.QueryParam;
 import jakarta.ws.rs.core.Context;
 import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
 import org.socratec.model.LogbookEntry;
+import org.socratec.service.AisStreamService;
 import org.traccar.api.BaseObjectResource;
 import org.traccar.helper.LogAction;
 import org.traccar.model.Device;
@@ -27,7 +28,6 @@ import org.traccar.storage.query.Request;
 
 @Path("logbook")
 @Produces(MediaType.APPLICATION_JSON)
-@Consumes(MediaType.APPLICATION_JSON)
 public class LogbookEntryResource extends BaseObjectResource<LogbookEntry> {
 
     @Inject
@@ -38,6 +38,9 @@ public class LogbookEntryResource extends BaseObjectResource<LogbookEntry> {
 
     @Inject
     private LogAction actionLogger;
+
+    @Inject
+    private AisStreamService aisStreamService;
 
     @Context
     private HttpServletRequest request;
@@ -64,6 +67,62 @@ public class LogbookEntryResource extends BaseObjectResource<LogbookEntry> {
     @DELETE
     public Response remove(@PathParam("id") long id) throws Exception {
         return Response.status(Response.Status.METHOD_NOT_ALLOWED).build();
+    }
+
+    @Path("mmsi/{id}")
+    @GET
+    public Response getByMmsi(
+            @PathParam("id") String mmsi,
+            @QueryParam("startLon") Double startLon,
+            @QueryParam("startLat") Double startLat,
+            @QueryParam("endLon") Double endLon,
+            @QueryParam("endLat") Double endLat) {
+        try {
+            // Build bounding box if coordinates are provided
+            double[][][] boundingBoxes = null;
+            if (startLon != null && startLat != null && endLon != null && endLat != null) {
+                // Validate coordinates
+                validateLatitude(startLat, "startLat");
+                validateLatitude(endLat, "endLat");
+                validateLongitude(startLon, "startLon");
+                validateLongitude(endLon, "endLon");
+
+                // Create bounding box: [[[startLon, startLat], [endLon, endLat]]]
+                boundingBoxes = new double[][][] {
+                    {{startLon, startLat}, {endLon, endLat}}
+                };
+            }
+
+            // Initiate WebSocket connection to AIS Stream
+            aisStreamService.connectToAisStream(mmsi, boundingBoxes);
+
+            return Response.ok()
+                .entity("{\"message\": \"AIS Stream connection initiated for MMSI: " + mmsi + "\"}")
+                .build();
+
+        } catch (IllegalArgumentException e) {
+            return Response.status(Response.Status.BAD_REQUEST)
+                .entity("{\"error\": \"" + e.getMessage() + "\"}")
+                .build();
+        } catch (Exception e) {
+            return Response.status(Response.Status.INTERNAL_SERVER_ERROR)
+                .entity("{\"error\": \"Failed to initiate AIS Stream connection: " + e.getMessage() + "\"}")
+                .build();
+        }
+    }
+
+    private void validateLatitude(double value, String name) {
+        if (value < -90.0 || value > 90.0) {
+            throw new IllegalArgumentException(
+                name + " must be between -90.0 and 90.0, got: " + value);
+        }
+    }
+
+    private void validateLongitude(double value, String name) {
+        if (value < -180.0 || value > 180.0) {
+            throw new IllegalArgumentException(
+                name + " must be between -180.0 and 180.0, got: " + value);
+        }
     }
 
     @Override
