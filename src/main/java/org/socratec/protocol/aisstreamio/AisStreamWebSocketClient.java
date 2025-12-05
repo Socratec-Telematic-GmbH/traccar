@@ -104,13 +104,7 @@ public class AisStreamWebSocketClient extends WebSocketClient {
 
     @Override
     public void onClose(int code, String reason, boolean remote) {
-        LOGGER.info(
-                "WebSocket closed for MMSI: {} - Code: {}, Reason: {}, Remote: {}",
-                mmsis,
-                code,
-                reason,
-                remote
-        );
+        LOGGER.info("WebSocket closed- Code: {}, Reason: {}, Remote: {}", code, reason, remote);
         if (remote) {
             onConnectionClosedCallback.run();
         }

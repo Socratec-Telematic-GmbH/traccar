@@ -18,6 +18,7 @@ import org.slf4j.LoggerFactory;
 import org.socratec.model.Carrier;
 import org.socratec.protocol.AisStreamService;
 import org.socratec.protocol.model.AISPositionReport;
+import org.traccar.ProcessingHandler;
 import org.traccar.api.BaseResource;
 import org.traccar.helper.LogAction;
 import org.traccar.model.Device;
@@ -44,10 +45,14 @@ public class CarrierResource extends BaseResource {
     @Inject
     private LogAction actionLogger;
 
+    @Inject
+    private ProcessingHandler processingHandler;
+
+    @Inject
+    private AisStreamService aisStreamService;
+
     @Context
     private HttpServletRequest request;
-
-    private AisStreamService aisStreamService;
 
     @GET
     public Collection<Carrier> get(
@@ -130,8 +135,7 @@ public class CarrierResource extends BaseResource {
                 .map(Carrier::getCarrierId)
                 .collect(Collectors.toSet());
 
-        aisStreamService = new AisStreamService(this::processMessage);
-        aisStreamService.connectToAisStream(uniqueCarrierIds);
+        aisStreamService.connectToAisStream(uniqueCarrierIds, this::processMessage);
 
         var response = new java.util.HashMap<String, Object>();
         response.put("message", "start tracking");
@@ -143,9 +147,7 @@ public class CarrierResource extends BaseResource {
     @POST
     public Response stopTracking() throws StorageException {
         LOGGER.info("stop tracking");
-        if (aisStreamService != null) {
-            aisStreamService.shutdown();
-        }
+        aisStreamService.shutdown();
         return Response.ok()
                 .entity("{\"message\": \"stop tracking\"}")
                 .build();
@@ -163,11 +165,12 @@ public class CarrierResource extends BaseResource {
                 return;
             }
 
-            // Create and store a position for each device associated with this MMSI
+            // Create and process a position for each device associated with this MMSI
             for (Carrier carrier : carriers) {
                 Position position = mapToPosition(aisPosition, carrier.getId());
-                position.setId(storage.addObject(position, new Request(new Columns.Exclude("id"))));
-                LOGGER.debug("Position stored for device {} (MMSI: {})", carrier.getId(), aisPosition.mmsi());
+                processingHandler.onReleased(null, position);
+                LOGGER.debug("Position queued for processing for device {} (MMSI: {})",
+                        carrier.getId(), aisPosition.mmsi());
             }
         } catch (StorageException e) {
             LOGGER.error("Failed to process AIS position message for MMSI: {}", aisPosition.mmsi(), e);

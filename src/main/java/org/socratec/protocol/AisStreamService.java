@@ -23,17 +23,16 @@ public class AisStreamService {
     private final ScheduledExecutorService scheduler;
     private AisStreamWebSocketClient activeConnection;
     private final Set<String> connectionContexts = ConcurrentHashMap.newKeySet();
-    private final Consumer<AISPositionReport> messageProcessor;
+    private Consumer<AISPositionReport> messageProcessor;
 
-    public AisStreamService(Consumer<AISPositionReport> messageProcessor) {
+    public AisStreamService() {
         this.scheduler = Executors.newScheduledThreadPool(10);
-        this.messageProcessor = messageProcessor;
         LOGGER.info("AIS Stream Service initialized");
     }
 
-    public void connectToAisStream(Set<String> mmsis) {
+    public void connectToAisStream(Set<String> mmsis, Consumer<AISPositionReport> messageProcessor) {
         LOGGER.info("Initiating AIS Stream connection for MMSI: {}", mmsis);
-        // Store connection context for reconnection
+        this.messageProcessor = messageProcessor;
         connectionContexts.addAll(mmsis);
 
         // Attempt connection with retry logic
@@ -74,7 +73,9 @@ public class AisStreamService {
 
     private void processMessage(AISPositionReport positionReport) {
         LOGGER.debug("Received AIS position report: {}", positionReport);
-        messageProcessor.accept(positionReport);
+        if (messageProcessor != null) {
+            messageProcessor.accept(positionReport);
+        }
     }
 
     private void scheduleReconnection(int attemptNumber) {
@@ -90,13 +91,6 @@ public class AisStreamService {
     public void shutdown() {
         LOGGER.info("Shutting down AIS Stream Service");
 
-        if (activeConnection.isOpen()) {
-            activeConnection.close();
-        }
-
-        activeConnection = null;
-        connectionContexts.clear();
-
         // Shutdown the scheduler
         scheduler.shutdown();
         try {
@@ -108,5 +102,12 @@ public class AisStreamService {
         } catch (Exception e) {
             LOGGER.error("Error during shutdown", e);
         }
+
+        if (activeConnection.isOpen()) {
+            activeConnection.close();
+        }
+
+        activeConnection = null;
+        connectionContexts.clear();
     }
 }
