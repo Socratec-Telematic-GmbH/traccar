@@ -26,7 +26,7 @@ public class AisStreamService {
     private Consumer<AISPositionReport> messageProcessor;
 
     public AisStreamService() {
-        this.scheduler = Executors.newScheduledThreadPool(10);
+        this.scheduler = Executors.newScheduledThreadPool(1);
         LOGGER.info("AIS Stream Service initialized");
     }
 
