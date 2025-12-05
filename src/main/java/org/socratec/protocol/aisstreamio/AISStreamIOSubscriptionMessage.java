@@ -17,10 +17,7 @@ class AISStreamIOSubscriptionMessage {
     @JsonProperty("FilterMessageTypes")
     private List<String> filterMessageTypes;
 
-    public AISStreamIOSubscriptionMessage() {
-    }
-
-    public AISStreamIOSubscriptionMessage(String apiKey, List<Object> boundingBoxes,
+    AISStreamIOSubscriptionMessage(String apiKey, List<Object> boundingBoxes,
                                           List<String> filtersShipMMSI, List<String> filterMessageTypes) {
         this.apiKey = apiKey;
         this.boundingBoxes = boundingBoxes != null ? boundingBoxes : List.of();

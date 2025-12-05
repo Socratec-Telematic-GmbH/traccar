@@ -12,6 +12,9 @@ import java.net.URI;
 import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
 import java.time.Instant;
+import java.time.ZonedDateTime;
+import java.time.format.DateTimeFormatter;
+import java.time.format.DateTimeFormatterBuilder;
 import java.util.List;
 import java.util.Set;
 import java.util.function.Consumer;
@@ -25,6 +28,13 @@ public class AisStreamWebSocketClient extends WebSocketClient {
     private static final double[][][] BOUNDING_BOX = new double[][][] {
         {{-90, -180}, {90, 180}}
     };
+    private static final DateTimeFormatter TIMESTAMP_FORMATTER = new DateTimeFormatterBuilder()
+            .appendPattern("yyyy-MM-dd HH:mm:ss")
+            .optionalStart()
+            .appendFraction(java.time.temporal.ChronoField.NANO_OF_SECOND, 0, 9, true)
+            .optionalEnd()
+            .appendPattern(" Z 'UTC'")
+            .toFormatter();
     private final Set<String> mmsis;
     private final Consumer<AISPositionReport> onMessageReceivedCallback;
     private final Runnable onConnectionClosedCallback;
@@ -74,19 +84,13 @@ public class AisStreamWebSocketClient extends WebSocketClient {
 
     private void processAisMessage(String message) {
         try {
-            // Parse the JSON message using DTO
-            AISStreamIOMessage AISStreamIOMessage = OBJECT_MAPPER.readValue(message, AISStreamIOMessage.class);
-            var mmsi = AISStreamIOMessage.getMetaData().getMmsi();
-            // Check if this is a position report
-            if (AISStreamIOMessage.getMessage() != null && AISStreamIOMessage.getMessage().getPositionReport() != null) {
-                var position = getPosition(AISStreamIOMessage);
-                // Print to console
-                System.out.println("=== AIS Position Report ===");
-                System.out.println("MMSI: " + mmsi);
+            AISStreamIOMessage aisStreamIOMessage = OBJECT_MAPPER.readValue(message, AISStreamIOMessage.class);
+            var mmsi = aisStreamIOMessage.getMetaData().getMmsi();
+            if (aisStreamIOMessage.getMessage() != null
+                    && aisStreamIOMessage.getMessage().getPositionReport() != null) {
+                var position = getPosition(mmsi, aisStreamIOMessage);
                 System.out.println(position);
-                System.out.println("===========================");
 
-                // Notify callback that message was received
                 if (onMessageReceivedCallback != null) {
                     onMessageReceivedCallback.accept(position);
                 }
@@ -127,7 +131,7 @@ public class AisStreamWebSocketClient extends WebSocketClient {
         return OBJECT_MAPPER.writeValueAsString(subscription);
     }
 
-    private static AISPositionReport getPosition(AISStreamIOMessage aisStreamIOMessage) {
+    private static AISPositionReport getPosition(String mmsi, AISStreamIOMessage aisStreamIOMessage) {
         AISStreamIOMessage.PositionReport positionReport = aisStreamIOMessage.getMessage().getPositionReport();
         String timestamp = aisStreamIOMessage.getMetaData() != null
                 ? aisStreamIOMessage.getMetaData().getTimeUtc() : null;
@@ -135,13 +139,14 @@ public class AisStreamWebSocketClient extends WebSocketClient {
         Instant parsedTimestamp = null;
         if (timestamp != null) {
             try {
-                parsedTimestamp = Instant.parse(timestamp);
+                parsedTimestamp = ZonedDateTime.parse(timestamp, TIMESTAMP_FORMATTER).toInstant();
             } catch (Exception e) {
-                LOGGER.warn("Failed to parse timestamp: {}", timestamp, e);
+                LOGGER.warn("Failed to parse timestamp: {} - {}", timestamp, e.getMessage());
             }
         }
 
         return new AISPositionReport(
+                mmsi,
                 new GPSCoordinates(positionReport.getLatitude(), positionReport.getLongitude()),
                 positionReport.getSog(),
                 positionReport.getCog(),

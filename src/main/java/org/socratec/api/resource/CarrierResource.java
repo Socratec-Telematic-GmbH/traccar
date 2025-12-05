@@ -16,6 +16,7 @@ import jakarta.ws.rs.core.Response;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.socratec.model.Carrier;
+import org.socratec.protocol.AisStreamService;
 import org.traccar.api.BaseResource;
 import org.traccar.helper.LogAction;
 import org.traccar.model.Device;
@@ -29,6 +30,7 @@ import org.traccar.storage.query.Request;
 import java.util.Collection;
 import java.util.Date;
 import java.util.LinkedList;
+import java.util.stream.Collectors;
 
 @Path("carriers")
 @Produces(MediaType.APPLICATION_JSON)
@@ -42,6 +44,8 @@ public class CarrierResource extends BaseResource {
 
     @Context
     private HttpServletRequest request;
+
+    private AisStreamService aisStreamService;
 
     @GET
     public Collection<Carrier> get(
@@ -118,20 +122,27 @@ public class CarrierResource extends BaseResource {
     @Path("startTracking")
     @POST
     public Response startTracking() throws StorageException {
-
         LOGGER.info("start tracking");
+        var carriers = storage.getObjects(Carrier.class, new Request(new Columns.All()));
+        var uniqueCarrierIds = carriers.stream()
+                .map(Carrier::getCarrierId)
+                .collect(Collectors.toSet());
 
-        return Response.ok()
-                .entity("{\"message\": \"start tracking\"}")
-                .build();
+        aisStreamService = new AisStreamService();
+        aisStreamService.connectToAisStream(uniqueCarrierIds);
+        var response = new java.util.HashMap<String, Object>();
+        response.put("message", "start tracking");
+        response.put("carrierIds", uniqueCarrierIds);
+        return Response.ok(response).build();
     }
 
     @Path("stopTracking")
     @POST
     public Response stopTracking() throws StorageException {
-
         LOGGER.info("stop tracking");
-
+        if (aisStreamService != null) {
+            aisStreamService.shutdown();
+        }
         return Response.ok()
                 .entity("{\"message\": \"stop tracking\"}")
                 .build();
