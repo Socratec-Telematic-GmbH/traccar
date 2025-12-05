@@ -11,6 +11,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
+import java.util.function.Consumer;
 
 @Singleton
 public class AisStreamService {
@@ -22,9 +23,11 @@ public class AisStreamService {
     private final ScheduledExecutorService scheduler;
     private AisStreamWebSocketClient activeConnection;
     private final Set<String> connectionContexts = ConcurrentHashMap.newKeySet();
+    private final Consumer<AISPositionReport> messageProcessor;
 
-    public AisStreamService() {
+    public AisStreamService(Consumer<AISPositionReport> messageProcessor) {
         this.scheduler = Executors.newScheduledThreadPool(10);
+        this.messageProcessor = messageProcessor;
         LOGGER.info("AIS Stream Service initialized");
     }
 
@@ -71,6 +74,7 @@ public class AisStreamService {
 
     private void processMessage(AISPositionReport positionReport) {
         LOGGER.debug("Received AIS position report: {}", positionReport);
+        messageProcessor.accept(positionReport);
     }
 
     private void scheduleReconnection(int attemptNumber) {
