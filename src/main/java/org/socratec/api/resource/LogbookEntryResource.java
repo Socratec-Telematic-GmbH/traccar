@@ -9,12 +9,13 @@ import jakarta.ws.rs.DELETE;
 import jakarta.ws.rs.Path;
 import jakarta.ws.rs.Produces;
 import jakarta.ws.rs.PathParam;
-import jakarta.ws.rs.QueryParam;
 import jakarta.ws.rs.core.Context;
 import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.socratec.model.LogbookEntry;
-import org.socratec.service.AisStreamService;
+import org.socratec.protocol.aisstreamio.AisStreamWebSocketClient;
 import org.traccar.api.BaseObjectResource;
 import org.traccar.helper.LogAction;
 import org.traccar.model.Device;
@@ -25,6 +26,9 @@ import org.traccar.storage.StorageException;
 import org.traccar.storage.query.Columns;
 import org.traccar.storage.query.Condition;
 import org.traccar.storage.query.Request;
+
+import java.util.Collections;
+import java.util.HashSet;
 
 @Path("logbook")
 @Produces(MediaType.APPLICATION_JSON)
@@ -39,8 +43,9 @@ public class LogbookEntryResource extends BaseObjectResource<LogbookEntry> {
     @Inject
     private LogAction actionLogger;
 
-    @Inject
-    private AisStreamService aisStreamService;
+//    @Inject
+//    private AisStreamService aisStreamService;
+private static final Logger LOGGER = LoggerFactory.getLogger(LogbookEntryResource.class);
 
     @Context
     private HttpServletRequest request;
@@ -71,30 +76,20 @@ public class LogbookEntryResource extends BaseObjectResource<LogbookEntry> {
 
     @Path("mmsi/{id}")
     @GET
-    public Response getByMmsi(
-            @PathParam("id") String mmsi,
-            @QueryParam("startLon") Double startLon,
-            @QueryParam("startLat") Double startLat,
-            @QueryParam("endLon") Double endLon,
-            @QueryParam("endLat") Double endLat) {
+    public Response getByMmsi(@PathParam("id") String mmsi) {
         try {
-            // Build bounding box if coordinates are provided
-            double[][][] boundingBoxes = null;
-            if (startLon != null && startLat != null && endLon != null && endLat != null) {
-                // Validate coordinates
-                validateLatitude(startLat, "startLat");
-                validateLatitude(endLat, "endLat");
-                validateLongitude(startLon, "startLon");
-                validateLongitude(endLon, "endLon");
-
-                // Create bounding box: [[[startLon, startLat], [endLon, endLat]]]
-                boundingBoxes = new double[][][] {
-                    {{startLon, startLat}, {endLon, endLat}}
-                };
-            }
-
+            AisStreamWebSocketClient client = new AisStreamWebSocketClient(
+                    new HashSet<>(Collections.singleton(mmsi)),
+                    (msg) -> {
+                        LOGGER.info("Received AIS message for MMSI: {}, Message: {}", mmsi, msg);
+                    },
+                    () -> {
+                        LOGGER.info("Connection closed for MMSI: {}", mmsi);
+                    }
+            );
+            client.connect();
             // Initiate WebSocket connection to AIS Stream
-            aisStreamService.connectToAisStream(mmsi, boundingBoxes);
+//            aisStreamService.connectToAisStream(mmsi, boundingBoxes);
 
             return Response.ok()
                 .entity("{\"message\": \"AIS Stream connection initiated for MMSI: " + mmsi + "\"}")

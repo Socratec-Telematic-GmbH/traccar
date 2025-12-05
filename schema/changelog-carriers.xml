@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+  xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+                      http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.4.xsd"
+  logicalFilePath="changelog-carriers">
+
+  <changeSet author="Socratec" id="changelog-carriers">
+
+    <preConditions onFail="MARK_RAN">
+      <not>
+        <tableExists tableName="tc_carriers" />
+      </not>
+    </preConditions>
+
+    <createTable tableName="tc_carriers">
+      <column name="id" type="INT">
+        <constraints nullable="false" primaryKey="true" />
+      </column>
+      <column name="carrierid" type="VARCHAR(9)">
+        <constraints nullable="false" />
+      </column>
+      <column name="type" type="TINYINT" defaultValueNumeric="0">
+        <constraints nullable="false" />
+      </column>
+      <column name="createdat" type="TIMESTAMP">
+        <constraints nullable="false" />
+      </column>
+    </createTable>
+
+    <addForeignKeyConstraint
+      baseTableName="tc_carriers"
+      baseColumnNames="id"
+      constraintName="fk_carriers_deviceid"
+      referencedTableName="tc_devices"
+      referencedColumnNames="id"
+      onDelete="CASCADE" />
+
+    <createIndex indexName="idx_carriers_carrierid" tableName="tc_carriers">
+      <column name="carrierid" />
+    </createIndex>
+
+  </changeSet>
+
+</databaseChangeLog>

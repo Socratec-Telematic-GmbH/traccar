@@ -1,10 +1,10 @@
-package org.socratec.model.ais;
+package org.socratec.protocol.aisstreamio;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
 @JsonIgnoreProperties(ignoreUnknown = true)
-public class AisMessage {
+class AISStreamIOMessage {
 
     @JsonProperty("Message")
     private Message message;
@@ -102,6 +102,9 @@ public class AisMessage {
 
     @JsonIgnoreProperties(ignoreUnknown = true)
     public static class MetaData {
+        @JsonProperty("MMSI")
+        private String mmsi;
+
         @JsonProperty("time_utc")
         private String timeUtc;
 
@@ -111,6 +114,14 @@ public class AisMessage {
 
         public void setTimeUtc(String timeUtc) {
             this.timeUtc = timeUtc;
+        }
+
+        public String getMmsi() {
+            return mmsi;
+        }
+
+        public void setMmsi(String mmsi) {
+            this.mmsi = mmsi;
         }
     }
 }
