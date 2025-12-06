@@ -252,6 +252,83 @@ paths:
           description: Forbidden - User does not have permission to access this device
           content: {}
   /carriers/{deviceId}:
+    put:
+      summary: Update a Carrier
+      description: |
+        Updates the carrier information associated with a device. Allows modification of the 
+        carrier ID and type. The device ID in the URL path must match the device ID in the 
+        request body. The original creation timestamp is preserved.
+      tags:
+        - Carriers
+      parameters:
+        - name: deviceId
+          in: path
+          required: true
+          description: The device ID whose carrier information should be updated
+          schema:
+            type: integer
+            format: int64
+          example: 123
+      requestBody:
+        required: true
+        description: Updated carrier object. The id field must match the deviceId parameter.
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Carrier'
+            example:
+              id: 123
+              carrierId: "211281999"
+              type: 0
+      responses:
+        '200':
+          description: Carrier successfully updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Carrier'
+              example:
+                id: 123
+                carrierId: "211281999"
+                type: 0
+                createdAt: "2024-12-06T15:30:00.000Z"
+        '400':
+          description: |
+            Bad request. This can occur when:
+            - Device ID in path doesn't match ID in request body
+            - carrierId is missing or empty
+            - Invalid field values
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+              examples:
+                mismatch:
+                  value:
+                    error: "Device ID mismatch"
+                missing:
+                  value:
+                    error: "carrierId is required"
+        '401':
+          description: Unauthorized - Authentication required
+          content: {}
+        '403':
+          description: Forbidden - User does not have permission to access this device
+          content: {}
+        '404':
+          description: Carrier not found for this device
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                example:
+                  error: "Carrier not found for this device"
     delete:
       summary: Remove a Carrier
       description: |

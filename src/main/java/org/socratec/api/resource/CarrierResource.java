@@ -6,6 +6,7 @@ import jakarta.ws.rs.Consumes;
 import jakarta.ws.rs.DELETE;
 import jakarta.ws.rs.GET;
 import jakarta.ws.rs.POST;
+import jakarta.ws.rs.PUT;
 import jakarta.ws.rs.Path;
 import jakarta.ws.rs.PathParam;
 import jakarta.ws.rs.Produces;
@@ -97,6 +98,45 @@ public class CarrierResource extends BaseResource {
 
         storage.addObject(entity, new Request(new Columns.All()));
         actionLogger.create(request, getUserId(), entity);
+
+        return Response.ok(entity).build();
+    }
+
+    @Path("{deviceId}")
+    @PUT
+    public Response update(@PathParam("deviceId") long deviceId, Carrier entity) throws Exception {
+
+        if (deviceId != entity.getId()) {
+            return Response.status(Response.Status.BAD_REQUEST)
+                    .entity("{\"error\": \"Device ID mismatch\"}")
+                    .build();
+        }
+
+        if (entity.getCarrierId() == null || entity.getCarrierId().trim().isEmpty()) {
+            return Response.status(Response.Status.BAD_REQUEST)
+                    .entity("{\"error\": \"carrierId is required\"}")
+                    .build();
+        }
+
+        permissionsService.checkPermission(Device.class, getUserId(), deviceId);
+
+        Carrier existingCarrier = storage.getObject(Carrier.class, new Request(
+                new Columns.All(),
+                new Condition.Equals("id", deviceId)));
+
+        if (existingCarrier == null) {
+            return Response.status(Response.Status.NOT_FOUND)
+                    .entity("{\"error\": \"Carrier not found for this device\"}")
+                    .build();
+        }
+
+        entity.setCreatedAt(existingCarrier.getCreatedAt());
+
+        storage.updateObject(entity, new Request(
+                new Columns.Exclude("id"),
+                new Condition.Equals("id", deviceId)));
+
+        actionLogger.edit(request, getUserId(), entity);
 
         return Response.ok(entity).build();
     }
