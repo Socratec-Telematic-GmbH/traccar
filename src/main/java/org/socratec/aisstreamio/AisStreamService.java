@@ -20,7 +20,7 @@ public class AisStreamService {
     private static final long RECONNECT_DELAY_SECONDS = 10;
 
     private final ScheduledExecutorService scheduler;
-    private AisStreamWebSocketClient activeConnection;
+    private AisStreamWebSocketClient client;
     private final Set<String> connectionContexts = ConcurrentHashMap.newKeySet();
     private Consumer<AISPositionReport> messageProcessor;
 
@@ -47,14 +47,14 @@ public class AisStreamService {
 
         try {
             // Create WebSocket client with cleanup and message received callbacks
-            activeConnection = new AisStreamWebSocketClient(
+            client = new AisStreamWebSocketClient(
                     connectionContexts,
                     this::processMessage,
                     () -> scheduleReconnection(attemptNumber)
             );
 
             // Connect to AIS Stream
-            boolean connected = activeConnection.connectBlocking(30, TimeUnit.SECONDS);
+            boolean connected = client.connectBlocking(30, TimeUnit.SECONDS);
 
             if (connected) {
                 LOGGER.info("Successfully connected to AIS Stream for MMSI: {} (attempt {})",
@@ -102,11 +102,17 @@ public class AisStreamService {
             LOGGER.error("Error during shutdown", e);
         }
 
-        if (activeConnection.isOpen()) {
-            activeConnection.close();
+        if (client.isOpen()) {
+            client.close();
         }
 
-        activeConnection = null;
+        client = null;
         connectionContexts.clear();
+    }
+
+    public void removeCarrierFromTracking(String mmsi) {
+        LOGGER.info("Removing carrier with MMSI: {} from tracking", mmsi);
+        connectionContexts.remove(mmsi);
+        client.updateSubscriptions(connectionContexts);
     }
 }

@@ -54,15 +54,7 @@ public class AisStreamWebSocketClient extends WebSocketClient {
     public void onOpen(ServerHandshake handshakedata) {
         LOGGER.info("WebSocket connected for MMSI: {}", mmsis);
 
-        try {
-            // Send subscription message
-            var msg = createSubscriptionMessage(mmsis);
-            send(msg);
-            LOGGER.info("Subscription message sent: {}", msg);
-        } catch (Exception e) {
-            LOGGER.error("Error sending subscription message for MMSI: {}", mmsis, e);
-            close();
-        }
+        sendSubscribeMessage(mmsis);
     }
 
     @Override
@@ -115,6 +107,18 @@ public class AisStreamWebSocketClient extends WebSocketClient {
         LOGGER.error("WebSocket error for MMSI: {}", mmsis, ex);
     }
 
+    private void sendSubscribeMessage(Set<String> mmsis) {
+        try {
+            // Send subscription message
+            var msg = createSubscriptionMessage(mmsis);
+            send(msg);
+            LOGGER.info("Subscription message sent: {}", msg);
+        } catch (Exception e) {
+            LOGGER.error("Error sending subscription message for MMSI: {}", mmsis, e);
+            close();
+        }
+    }
+
     private static String createSubscriptionMessage(Set<String> mmsis) throws Exception {
         AISStreamIOSubscriptionMessage subscription = new AISStreamIOSubscriptionMessage(
                 AisStreamWebSocketClient.API_KEY,
@@ -147,5 +151,9 @@ public class AisStreamWebSocketClient extends WebSocketClient {
                 positionReport.getTrueHeading(),
                 parsedTimestamp
         );
+    }
+
+    public void updateSubscriptions(Set<String> connectionContexts) {
+        sendSubscribeMessage(connectionContexts);
     }
 }

@@ -4,8 +4,6 @@ import io.netty.channel.embedded.EmbeddedChannel;
 import io.netty.channel.group.ChannelGroup;
 import io.netty.channel.group.DefaultChannelGroup;
 import io.netty.util.concurrent.GlobalEventExecutor;
-import jakarta.inject.Inject;
-import jakarta.inject.Singleton;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.socratec.model.Carrier;
@@ -25,7 +23,6 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
-@Singleton
 public class AisMessageProcessor implements TrackerConnector {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(AisMessageProcessor.class);
@@ -33,23 +30,18 @@ public class AisMessageProcessor implements TrackerConnector {
 
     private final Storage storage;
     private final AisStreamService aisStreamService;
-    private EmbeddedChannel syntheticChannel;
+    private final EmbeddedChannel syntheticChannel;
     private final ExecutorService processingExecutor;
     private final ChannelGroup channelGroup;
 
-    @Inject
-    public AisMessageProcessor(Storage storage, AisStreamService aisStreamService) {
-        this.storage = storage;
+    public AisMessageProcessor(EmbeddedChannel syntheticChannel, AisStreamService aisStreamService, Storage storage) {
+        this.syntheticChannel = syntheticChannel;
         this.aisStreamService = aisStreamService;
+        this.storage = storage;
         this.processingExecutor = Executors.newFixedThreadPool(THREAD_POOL_SIZE);
         this.channelGroup = new DefaultChannelGroup(GlobalEventExecutor.INSTANCE);
-        LOGGER.info("AIS Message Processor initialized with {} threads", THREAD_POOL_SIZE);
-    }
-
-    public void setSyntheticChannel(EmbeddedChannel syntheticChannel) {
-        this.syntheticChannel = syntheticChannel;
         this.channelGroup.add(syntheticChannel);
-        LOGGER.info("Synthetic channel configured for AIS Message Processor");
+        LOGGER.info("AIS Message Processor initialized with {} threads", THREAD_POOL_SIZE);
     }
 
     @Override
@@ -108,7 +100,8 @@ public class AisMessageProcessor implements TrackerConnector {
                     new Condition.Equals("carrierId", aisPosition.mmsi())));
 
             if (carriers.isEmpty()) {
-                LOGGER.warn("Carrier with MMSI {} not tracked.", aisPosition.mmsi());
+                LOGGER.warn("Carrier with MMSI {} not tracked. Removing from tracking list.", aisPosition.mmsi());
+                aisStreamService.removeCarrierFromTracking(aisPosition.mmsi());
                 return;
             }
 
@@ -152,12 +145,12 @@ public class AisMessageProcessor implements TrackerConnector {
 
     public void shutdown() {
         LOGGER.info("Stopping AIS Stream client");
-        
+
         // Shutdown AIS Stream Service
         if (aisStreamService != null) {
             aisStreamService.shutdown();
         }
-        
+
         // Shutdown processing executor
         if (processingExecutor != null && !processingExecutor.isShutdown()) {
             LOGGER.info("Shutting down AIS message processing executor");
@@ -173,7 +166,7 @@ public class AisMessageProcessor implements TrackerConnector {
                 Thread.currentThread().interrupt();
             }
         }
-        
+
         // Close channel group
         if (channelGroup != null) {
             channelGroup.close().awaitUninterruptibly();
