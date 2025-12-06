@@ -43,7 +43,7 @@ public class AisStreamService {
 
         // Scenario 2: Carriers exist but client not running - start the client
         if (client == null || !client.isOpen()) {
-            LOGGER.info("Client not running but carriers exist. Starting AIS Stream connection for {} carriers", 
+            LOGGER.info("Client not running but carriers exist. Starting AIS Stream connection for {} carriers",
                     mmsis.size());
             connectionContexts.clear();
             connectionContexts.addAll(mmsis);
@@ -53,7 +53,7 @@ public class AisStreamService {
 
         // Scenario 3: Compare current and new carrier sets
         if (!connectionContexts.equals(mmsis)) {
-            LOGGER.info("Carrier list changed. Updating subscriptions. Current: {}, New: {}", 
+            LOGGER.info("Carrier list changed. Updating subscriptions. Current: {}, New: {}",
                     connectionContexts.size(), mmsis.size());
 
             // Update connection contexts

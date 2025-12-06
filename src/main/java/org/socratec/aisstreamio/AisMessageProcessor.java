@@ -122,13 +122,13 @@ public class AisMessageProcessor implements TrackerConnector {
 
             if (carriers.isEmpty()) {
                 LOGGER.warn("Carrier with MMSI {} not tracked. Removing from tracking list.", aisPosition.mmsi());
-                
+
                 // Get current tracked carriers and remove this MMSI
                 Set<String> currentTracked = aisStreamService.getCurrentTrackedCarriers();
                 Set<String> updatedTracked = currentTracked.stream()
                         .filter(mmsi -> !mmsi.equals(aisPosition.mmsi()))
                         .collect(Collectors.toSet());
-                
+
                 // Update subscription without the removed carrier
                 aisStreamService.subscribeAISStream(updatedTracked, this::processMessageAsync);
                 return;
