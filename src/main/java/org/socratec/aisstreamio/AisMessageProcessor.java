@@ -18,8 +18,10 @@ import org.traccar.TrackerConnector;
 
 import java.util.Collection;
 import java.util.Date;
+import java.util.Set;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
@@ -27,11 +29,13 @@ public class AisMessageProcessor implements TrackerConnector {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(AisMessageProcessor.class);
     private static final int THREAD_POOL_SIZE = 10;
+    private static final long CARRIER_SYNC_INTERVAL_MINUTES = 5;
 
     private final Storage storage;
     private final AisStreamService aisStreamService;
     private final EmbeddedChannel syntheticChannel;
     private final ExecutorService processingExecutor;
+    private final ScheduledExecutorService scheduledExecutor;
     private final ChannelGroup channelGroup;
 
     public AisMessageProcessor(EmbeddedChannel syntheticChannel, AisStreamService aisStreamService, Storage storage) {
@@ -39,6 +43,7 @@ public class AisMessageProcessor implements TrackerConnector {
         this.aisStreamService = aisStreamService;
         this.storage = storage;
         this.processingExecutor = Executors.newFixedThreadPool(THREAD_POOL_SIZE);
+        this.scheduledExecutor = Executors.newScheduledThreadPool(1);
         this.channelGroup = new DefaultChannelGroup(GlobalEventExecutor.INSTANCE);
         this.channelGroup.add(syntheticChannel);
         LOGGER.info("AIS Message Processor initialized with {} threads", THREAD_POOL_SIZE);
@@ -78,9 +83,45 @@ public class AisMessageProcessor implements TrackerConnector {
 
             // Connect to AIS Stream
             aisStreamService.connectToAisStream(uniqueCarrierIds, this::processMessageAsync);
+
+            // Start periodic carrier synchronization job
+            startCarrierSyncJob();
         } catch (StorageException e) {
             LOGGER.error("Failed to load carriers for AIS tracking", e);
             throw new Exception("Failed to start AIS Stream client", e);
+        }
+    }
+
+    private void startCarrierSyncJob() {
+        LOGGER.info("Starting periodic carrier synchronization job (every {} minutes)", CARRIER_SYNC_INTERVAL_MINUTES);
+        scheduledExecutor.scheduleAtFixedRate(
+                this::synchronizeCarriers,
+                CARRIER_SYNC_INTERVAL_MINUTES,
+                CARRIER_SYNC_INTERVAL_MINUTES,
+                TimeUnit.MINUTES
+        );
+    }
+
+    private void synchronizeCarriers() {
+        try {
+            LOGGER.debug("Running carrier synchronization job");
+
+            // Get all carriers from database
+            var carriers = storage.getObjects(Carrier.class, new Request(new Columns.All()));
+
+            Set<String> currentCarrierIds = carriers.stream()
+                    .map(Carrier::getCarrierId)
+                    .collect(Collectors.toSet());
+
+            LOGGER.debug("Found {} carriers in database", currentCarrierIds.size());
+
+            // Ask AisStreamService to update if required
+            aisStreamService.updateCarriersIfRequired(currentCarrierIds);
+
+        } catch (StorageException e) {
+            LOGGER.error("Failed to synchronize carriers", e);
+        } catch (Exception e) {
+            LOGGER.error("Unexpected error during carrier synchronization", e);
         }
     }
 
@@ -145,6 +186,22 @@ public class AisMessageProcessor implements TrackerConnector {
 
     public void shutdown() {
         LOGGER.info("Stopping AIS Stream client");
+
+        // Shutdown scheduled executor
+        if (scheduledExecutor != null && !scheduledExecutor.isShutdown()) {
+            LOGGER.info("Shutting down carrier synchronization scheduler");
+            scheduledExecutor.shutdown();
+            try {
+                if (!scheduledExecutor.awaitTermination(5, TimeUnit.SECONDS)) {
+                    scheduledExecutor.shutdownNow();
+                }
+                LOGGER.info("Carrier synchronization scheduler shutdown complete");
+            } catch (InterruptedException e) {
+                LOGGER.warn("Interrupted while waiting for scheduler shutdown", e);
+                scheduledExecutor.shutdownNow();
+                Thread.currentThread().interrupt();
+            }
+        }
 
         // Shutdown AIS Stream Service
         if (aisStreamService != null) {

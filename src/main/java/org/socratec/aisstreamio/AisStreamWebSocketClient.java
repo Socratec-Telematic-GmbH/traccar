@@ -107,6 +107,10 @@ public class AisStreamWebSocketClient extends WebSocketClient {
         LOGGER.error("WebSocket error for MMSI: {}", mmsis, ex);
     }
 
+    public void updateSubscriptions(Set<String> connectionContexts) {
+        sendSubscribeMessage(connectionContexts);
+    }
+
     private void sendSubscribeMessage(Set<String> mmsis) {
         try {
             // Send subscription message
@@ -151,9 +155,5 @@ public class AisStreamWebSocketClient extends WebSocketClient {
                 positionReport.getTrueHeading(),
                 parsedTimestamp
         );
-    }
-
-    public void updateSubscriptions(Set<String> connectionContexts) {
-        sendSubscribeMessage(connectionContexts);
     }
 }

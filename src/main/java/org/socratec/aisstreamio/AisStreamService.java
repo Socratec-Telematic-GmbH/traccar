@@ -113,6 +113,32 @@ public class AisStreamService {
     public void removeCarrierFromTracking(String mmsi) {
         LOGGER.info("Removing carrier with MMSI: {} from tracking", mmsi);
         connectionContexts.remove(mmsi);
-        client.updateSubscriptions(connectionContexts);
+        if (client != null && client.isOpen()) {
+            client.updateSubscriptions(connectionContexts);
+        }
+    }
+
+    public void updateCarriersIfRequired(Set<String> newCarrierIds) {
+        // Check if client is connected
+        if (client == null || !client.isOpen()) {
+            LOGGER.debug("WebSocket client not connected, skipping carrier update");
+            return;
+        }
+
+        // Compare current and new carrier sets
+        if (!connectionContexts.equals(newCarrierIds)) {
+            LOGGER.info("Carrier list changed. Updating subscriptions. Current: {}, New: {}", 
+                    connectionContexts.size(), newCarrierIds.size());
+            
+            // Update connection contexts
+            connectionContexts.clear();
+            connectionContexts.addAll(newCarrierIds);
+
+            // Update WebSocket subscriptions
+            client.updateSubscriptions(connectionContexts);
+            LOGGER.info("Updated AIS Stream subscriptions. Now tracking {} carriers", connectionContexts.size());
+        } else {
+            LOGGER.debug("No changes detected in carrier list");
+        }
     }
 }

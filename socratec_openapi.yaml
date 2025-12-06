@@ -29,6 +29,8 @@ tags:
     description: Trip management and logbook functionality
   - name: Reports
     description: Report generation endpoints for logbook and trip data
+  - name: Carriers
+    description: Carrier management for vessel and vehicle tracking
 paths:
   /trips:
     get:
@@ -140,6 +142,144 @@ paths:
       responses:
         '405':
           description: Method Not Allowed - Trip deletion is not supported
+          content: {}
+  /carriers:
+    get:
+      summary: Fetch a list of Carriers
+      description: |
+        Retrieve carrier information for devices. Without parameters, returns carriers for devices 
+        the user has access to. Carriers associate external carrier IDs (such as vessel MMSI numbers 
+        or vehicle identifiers) with tracked devices.
+      tags:
+        - Carriers
+      parameters:
+        - name: all
+          in: query
+          description: Can only be used by admins to fetch all carriers
+          schema:
+            type: boolean
+        - name: userId
+          in: query
+          description: Filter carriers by user ID. Standard users can only use their own userId
+          schema:
+            type: integer
+            format: int64
+      responses:
+        '200':
+          description: Successfully retrieved list of carriers
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Carrier'
+              example:
+                - id: 123
+                  carrierId: "211281610"
+                  type: 0
+                  createdAt: "2024-12-06T15:30:00.000Z"
+                - id: 124
+                  carrierId: "SHIP-ABC-001"
+                  type: 0
+                  createdAt: "2024-12-05T10:15:00.000Z"
+        '400':
+          description: No permission or invalid parameters
+          content: {}
+        '401':
+          description: Unauthorized - Authentication required
+          content: {}
+    post:
+      summary: Create a Carrier
+      description: |
+        Associates a carrier identifier with a device. The carrier ID is typically an external 
+        identifier such as a vessel MMSI number or vehicle identification. The device must exist 
+        and the user must have permission to access it.
+      tags:
+        - Carriers
+      requestBody:
+        required: true
+        description: Carrier object to create. The id field represents the device ID.
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Carrier'
+            example:
+              id: 123
+              carrierId: "211281610"
+              type: 0
+      responses:
+        '200':
+          description: Carrier successfully created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Carrier'
+              example:
+                id: 123
+                carrierId: "211281610"
+                type: 0
+                createdAt: "2024-12-06T15:30:00.000Z"
+        '400':
+          description: |
+            Bad request. This can occur when:
+            - id field is missing or zero
+            - carrierId is missing or empty
+            - Invalid field values
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                example:
+                  error: "carrierId is required"
+        '404':
+          description: Device not found
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                example:
+                  error: "Device not found"
+        '401':
+          description: Unauthorized - Authentication required
+          content: {}
+        '403':
+          description: Forbidden - User does not have permission to access this device
+          content: {}
+  /carriers/{deviceId}:
+    delete:
+      summary: Remove a Carrier
+      description: |
+        Removes the carrier association from a device. This does not delete the device itself,
+        only the carrier information linked to it.
+      tags:
+        - Carriers
+      parameters:
+        - name: deviceId
+          in: path
+          required: true
+          description: The device ID whose carrier association should be removed
+          schema:
+            type: integer
+            format: int64
+          example: 123
+      responses:
+        '204':
+          description: Carrier successfully removed
+          content: {}
+        '401':
+          description: Unauthorized - Authentication required
+          content: {}
+        '403':
+          description: Forbidden - User does not have permission to access this device
+          content: {}
+        '404':
+          description: Device or carrier not found
           content: {}
   /logbook:
     post:
@@ -1290,6 +1430,44 @@ components:
         - successful
         - failed
         - results
+    Carrier:
+      type: object
+      description: |
+        Represents a carrier association for a device. Carriers link external identifiers 
+        (such as vessel MMSI numbers or vehicle IDs) to tracked devices in the system.
+        Stored in the tc_carriers database table.
+      properties:
+        id:
+          type: integer
+          format: int64
+          description: Device ID (inherited from BaseModel, represents the device this carrier is associated with)
+        carrierId:
+          type: string
+          description: External carrier identifier (e.g., vessel MMSI, vehicle ID). Required field.
+          minLength: 1
+          example: "211281610"
+        type:
+          $ref: '#/components/schemas/CarrierType'
+        createdAt:
+          type: string
+          format: date-time
+          description: Timestamp when the carrier association was created
+          example: "2024-12-06T15:30:00.000Z"
+      required:
+        - id
+        - carrierId
+    CarrierType:
+      type: integer
+      description: |
+        Enum representing the type of carrier.
+        Currently supports VESSEL (0) as the primary carrier type.
+        Defaults to VESSEL if not specified.
+      enum: [0]
+      default: 0
+      x-enum-varnames: [VESSEL]
+      x-enum-descriptions:
+        - "VESSEL (0): Maritime vessel carrier type (default)"
+      example: 0
   requestBodies:
     Trip:
       content:
