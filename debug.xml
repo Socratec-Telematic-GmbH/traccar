@@ -26,6 +26,7 @@
 
     <entry key='atrack.custom'>true</entry>
     <entry key='intellitrac.port'>6037</entry>
+    <entry key='aisstream.port'>1</entry>
 
     <!--<entry key='web.port'>8083</entry>-->
     <!--<entry key='geolocation.port'>5056</entry>-->
