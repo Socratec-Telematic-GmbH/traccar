@@ -1,4 +1,4 @@
-package org.socratec.protocol.model;
+package org.socratec.aisstreamio.model;
 
 import java.time.Instant;
 

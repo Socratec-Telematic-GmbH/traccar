@@ -1,12 +1,12 @@
-package org.socratec.protocol.aisstreamio;
+package org.socratec.aisstreamio;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.java_websocket.client.WebSocketClient;
 import org.java_websocket.handshake.ServerHandshake;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.socratec.protocol.model.AISPositionReport;
-import org.socratec.protocol.model.GPSCoordinates;
+import org.socratec.aisstreamio.model.AISPositionReport;
+import org.socratec.aisstreamio.model.GPSCoordinates;
 
 import java.net.URI;
 import java.nio.ByteBuffer;
@@ -89,7 +89,7 @@ public class AisStreamWebSocketClient extends WebSocketClient {
             if (aisStreamIOMessage.getMessage() != null
                     && aisStreamIOMessage.getMessage().getPositionReport() != null) {
                 var position = getPosition(mmsi, aisStreamIOMessage);
-                System.out.println(position);
+                LOGGER.info("Received AIS position report: {}", position);
 
                 if (onMessageReceivedCallback != null) {
                     onMessageReceivedCallback.accept(position);

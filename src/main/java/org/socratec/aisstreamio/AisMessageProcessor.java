@@ -1,12 +1,12 @@
-package org.socratec.protocol;
+package org.socratec.aisstreamio;
 
+import io.netty.channel.embedded.EmbeddedChannel;
 import jakarta.inject.Inject;
 import jakarta.inject.Singleton;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.socratec.model.Carrier;
-import org.socratec.protocol.model.AISPositionReport;
-import org.traccar.ProcessingHandler;
+import org.socratec.aisstreamio.model.AISPositionReport;
 import org.traccar.model.Position;
 import org.traccar.storage.Storage;
 import org.traccar.storage.StorageException;
@@ -27,15 +27,19 @@ public class AisMessageProcessor {
     private static final int THREAD_POOL_SIZE = 10;
 
     private final Storage storage;
-    private final ProcessingHandler processingHandler;
+    private EmbeddedChannel syntheticChannel;
     private final ExecutorService processingExecutor;
 
     @Inject
-    public AisMessageProcessor(Storage storage, ProcessingHandler processingHandler) {
+    public AisMessageProcessor(Storage storage) {
         this.storage = storage;
-        this.processingHandler = processingHandler;
         this.processingExecutor = Executors.newFixedThreadPool(THREAD_POOL_SIZE);
         LOGGER.info("AIS Message Processor initialized with {} threads", THREAD_POOL_SIZE);
+    }
+
+    public void setSyntheticChannel(EmbeddedChannel syntheticChannel) {
+        this.syntheticChannel = syntheticChannel;
+        LOGGER.info("Synthetic channel configured for AIS Message Processor");
     }
 
     public void processMessageAsync(AISPositionReport aisPosition) {
@@ -55,7 +59,7 @@ public class AisMessageProcessor {
 
             for (Carrier carrier : carriers) {
                 Position position = mapToPosition(aisPosition, carrier.getId());
-                processingHandler.onReleased(null, position);
+                syntheticChannel.writeInbound(position);
                 LOGGER.debug("Position queued for processing for device {} (MMSI: {})",
                         carrier.getId(), aisPosition.mmsi());
             }

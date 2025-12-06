@@ -1,10 +1,9 @@
-package org.socratec.protocol;
+package org.socratec.aisstreamio;
 
 import jakarta.inject.Singleton;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.socratec.protocol.aisstreamio.AisStreamWebSocketClient;
-import org.socratec.protocol.model.AISPositionReport;
+import org.socratec.aisstreamio.model.AISPositionReport;
 
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
