@@ -67,29 +67,9 @@ public class AisMessageProcessor implements TrackerConnector {
     @Override
     public void start() throws Exception {
         LOGGER.info("Starting AIS Stream client");
-        try {
-            // Get all carriers from database
-            var carriers = storage.getObjects(Carrier.class, new Request(new Columns.All()));
-            if (carriers.isEmpty()) {
-                LOGGER.warn("No carriers configured for AIS tracking");
-                return;
-            }
-
-            var uniqueCarrierIds = carriers.stream()
-                    .map(Carrier::getCarrierId)
-                    .collect(Collectors.toSet());
-
-            LOGGER.info("Starting AIS tracking for {} carriers: {}", uniqueCarrierIds.size(), uniqueCarrierIds);
-
-            // Connect to AIS Stream
-            aisStreamService.connectToAisStream(uniqueCarrierIds, this::processMessageAsync);
-
-            // Start periodic carrier synchronization job
-            startCarrierSyncJob();
-        } catch (StorageException e) {
-            LOGGER.error("Failed to load carriers for AIS tracking", e);
-            throw new Exception("Failed to start AIS Stream client", e);
-        }
+        // Start periodic carrier synchronization job
+        synchronizeCarriers();
+        startCarrierSyncJob();
     }
 
     private void startCarrierSyncJob() {
@@ -115,8 +95,8 @@ public class AisMessageProcessor implements TrackerConnector {
 
             LOGGER.debug("Found {} carriers in database", currentCarrierIds.size());
 
-            // Ask AisStreamService to update if required
-            aisStreamService.updateCarriersIfRequired(currentCarrierIds);
+            // Update AIS Stream subscription
+            aisStreamService.subscribeAISStream(currentCarrierIds, this::processMessageAsync);
 
         } catch (StorageException e) {
             LOGGER.error("Failed to synchronize carriers", e);
@@ -142,7 +122,15 @@ public class AisMessageProcessor implements TrackerConnector {
 
             if (carriers.isEmpty()) {
                 LOGGER.warn("Carrier with MMSI {} not tracked. Removing from tracking list.", aisPosition.mmsi());
-                aisStreamService.removeCarrierFromTracking(aisPosition.mmsi());
+                
+                // Get current tracked carriers and remove this MMSI
+                Set<String> currentTracked = aisStreamService.getCurrentTrackedCarriers();
+                Set<String> updatedTracked = currentTracked.stream()
+                        .filter(mmsi -> !mmsi.equals(aisPosition.mmsi()))
+                        .collect(Collectors.toSet());
+                
+                // Update subscription without the removed carrier
+                aisStreamService.subscribeAISStream(updatedTracked, this::processMessageAsync);
                 return;
             }
 

@@ -29,13 +29,47 @@ public class AisStreamService {
         LOGGER.info("AIS Stream Service initialized");
     }
 
-    public void connectToAisStream(Set<String> mmsis, Consumer<AISPositionReport> messageProcessor) {
-        LOGGER.info("Initiating AIS Stream connection for MMSI: {}", mmsis);
+    public void subscribeAISStream(Set<String> mmsis, Consumer<AISPositionReport> messageProcessor) {
         this.messageProcessor = messageProcessor;
-        connectionContexts.addAll(mmsis);
 
-        // Attempt connection with retry logic
-        connectWithRetry(1);
+        // Scenario 1: No carriers to track - shutdown if running
+        if (mmsis == null || mmsis.isEmpty()) {
+            if (client != null && client.isOpen()) {
+                LOGGER.info("No carriers to track. Shutting down AIS Stream connection.");
+                shutdown();
+            }
+            return;
+        }
+
+        // Scenario 2: Carriers exist but client not running - start the client
+        if (client == null || !client.isOpen()) {
+            LOGGER.info("Client not running but carriers exist. Starting AIS Stream connection for {} carriers", 
+                    mmsis.size());
+            connectionContexts.clear();
+            connectionContexts.addAll(mmsis);
+            connectWithRetry(1);
+            return;
+        }
+
+        // Scenario 3: Compare current and new carrier sets
+        if (!connectionContexts.equals(mmsis)) {
+            LOGGER.info("Carrier list changed. Updating subscriptions. Current: {}, New: {}", 
+                    connectionContexts.size(), mmsis.size());
+
+            // Update connection contexts
+            connectionContexts.clear();
+            connectionContexts.addAll(mmsis);
+
+            // Update WebSocket subscriptions
+            client.updateSubscriptions(connectionContexts);
+            LOGGER.info("Updated AIS Stream subscriptions. Now tracking {} carriers", connectionContexts.size());
+        } else {
+            LOGGER.debug("No changes detected in carrier list");
+        }
+    }
+
+    public Set<String> getCurrentTrackedCarriers() {
+        return Set.copyOf(connectionContexts);
     }
 
     private void connectWithRetry(int attemptNumber) {
@@ -110,35 +144,4 @@ public class AisStreamService {
         connectionContexts.clear();
     }
 
-    public void removeCarrierFromTracking(String mmsi) {
-        LOGGER.info("Removing carrier with MMSI: {} from tracking", mmsi);
-        connectionContexts.remove(mmsi);
-        if (client != null && client.isOpen()) {
-            client.updateSubscriptions(connectionContexts);
-        }
-    }
-
-    public void updateCarriersIfRequired(Set<String> newCarrierIds) {
-        // Check if client is connected
-        if (client == null || !client.isOpen()) {
-            LOGGER.debug("WebSocket client not connected, skipping carrier update");
-            return;
-        }
-
-        // Compare current and new carrier sets
-        if (!connectionContexts.equals(newCarrierIds)) {
-            LOGGER.info("Carrier list changed. Updating subscriptions. Current: {}, New: {}", 
-                    connectionContexts.size(), newCarrierIds.size());
-            
-            // Update connection contexts
-            connectionContexts.clear();
-            connectionContexts.addAll(newCarrierIds);
-
-            // Update WebSocket subscriptions
-            client.updateSubscriptions(connectionContexts);
-            LOGGER.info("Updated AIS Stream subscriptions. Now tracking {} carriers", connectionContexts.size());
-        } else {
-            LOGGER.debug("No changes detected in carrier list");
-        }
-    }
 }
