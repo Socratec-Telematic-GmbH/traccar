@@ -108,6 +108,9 @@ dependencies {
     
     // Socratec: PDF generation for logbook reports
     implementation "com.itextpdf:html2pdf:5.0.5"
+    
+    // Socratec: WebSocket client for AIS Stream integration
+    implementation "org.java-websocket:Java-WebSocket:1.5.7"
 }
 
 test {

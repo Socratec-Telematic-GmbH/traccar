@@ -2,7 +2,6 @@ package org.socratec.api.resource;
 
 import jakarta.inject.Inject;
 import jakarta.servlet.http.HttpServletRequest;
-import jakarta.ws.rs.Consumes;
 import jakarta.ws.rs.GET;
 import jakarta.ws.rs.PUT;
 import jakarta.ws.rs.POST;
@@ -13,6 +12,8 @@ import jakarta.ws.rs.PathParam;
 import jakarta.ws.rs.core.Context;
 import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.socratec.model.LogbookEntry;
 import org.traccar.api.BaseObjectResource;
 import org.traccar.helper.LogAction;
@@ -25,9 +26,9 @@ import org.traccar.storage.query.Columns;
 import org.traccar.storage.query.Condition;
 import org.traccar.storage.query.Request;
 
+
 @Path("logbook")
 @Produces(MediaType.APPLICATION_JSON)
-@Consumes(MediaType.APPLICATION_JSON)
 public class LogbookEntryResource extends BaseObjectResource<LogbookEntry> {
 
     @Inject
@@ -38,6 +39,8 @@ public class LogbookEntryResource extends BaseObjectResource<LogbookEntry> {
 
     @Inject
     private LogAction actionLogger;
+
+    private static final Logger LOGGER = LoggerFactory.getLogger(LogbookEntryResource.class);
 
     @Context
     private HttpServletRequest request;

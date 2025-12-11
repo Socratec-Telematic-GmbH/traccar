@@ -15,6 +15,7 @@
  */
 package org.traccar.helper.model;
 
+import org.traccar.api.security.ServiceAccountUser;
 import org.traccar.model.Device;
 import org.traccar.model.Group;
 import org.traccar.model.User;
@@ -44,18 +45,27 @@ public final class DeviceUtil {
             Storage storage, long userId,
             Collection<Long> deviceIds, Collection<Long> groupIds) throws StorageException {
 
-        var devices = storage.getObjects(Device.class, new Request(
-                new Columns.All(),
-                new Condition.Permission(User.class, userId, Device.class)));
+        Collection<Device> devices;
+        Collection<Group> groups;
+        if (userId == ServiceAccountUser.ID) {
+            // ServiceAccountUser has access to all devices and groups without restriction
+            devices = storage.getObjects(Device.class, new Request(new Columns.All()));
+            groups = storage.getObjects(Group.class, new Request(new Columns.All()));
+        } else {
+            // Regular users are restricted to devices and groups they have permission to access
+            devices = storage.getObjects(Device.class, new Request(
+                    new Columns.All(),
+                    new Condition.Permission(User.class, userId, Device.class)));
+            groups = storage.getObjects(Group.class, new Request(
+                    new Columns.All(),
+                    new Condition.Permission(User.class, userId, Group.class)));
+        }
         var deviceById = devices.stream()
                 .collect(Collectors.toUnmodifiableMap(Device::getId, x -> x));
         var devicesByGroup = devices.stream()
                 .filter(x -> x.getGroupId() > 0)
                 .collect(Collectors.groupingBy(Device::getGroupId));
 
-        var groups = storage.getObjects(Group.class, new Request(
-                new Columns.All(),
-                new Condition.Permission(User.class, userId, Group.class)));
         var groupsByGroup = groups.stream()
                 .filter(x -> x.getGroupId() > 0)
                 .collect(Collectors.groupingBy(Group::getGroupId));
