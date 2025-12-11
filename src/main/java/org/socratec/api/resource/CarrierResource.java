@@ -49,6 +49,8 @@ public class CarrierResource extends BaseResource {
             @QueryParam("all") boolean all,
             @QueryParam("userId") long userId) throws StorageException {
 
+        permissionsService.checkAdmin(getUserId());
+
         var conditions = new LinkedList<Condition>();
 
         if (all) {
@@ -70,6 +72,8 @@ public class CarrierResource extends BaseResource {
 
     @POST
     public Response add(Carrier entity) throws Exception {
+        permissionsService.checkAdmin(getUserId());
+
         if (entity.getId() == 0) {
             return Response.status(Response.Status.BAD_REQUEST)
                     .entity("{\"error\": \"id is required\"}")
@@ -105,6 +109,8 @@ public class CarrierResource extends BaseResource {
     @Path("{deviceId}")
     @PUT
     public Response update(@PathParam("deviceId") long deviceId, Carrier entity) throws Exception {
+
+        permissionsService.checkAdmin(getUserId());
 
         if (deviceId != entity.getId()) {
             return Response.status(Response.Status.BAD_REQUEST)
@@ -144,6 +150,8 @@ public class CarrierResource extends BaseResource {
     @Path("{deviceId}")
     @DELETE
     public Response remove(@PathParam("deviceId") long deviceId) throws Exception {
+
+        permissionsService.checkAdmin(getUserId());
 
         permissionsService.checkPermission(Device.class, getUserId(), deviceId);
 

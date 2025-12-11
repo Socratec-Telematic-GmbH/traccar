@@ -2011,4 +2011,22 @@ public final class Keys {
             "broadcast.secondary",
             List.of(KeyType.CONFIG));
 
+    // ============================================================================================
+    // SOCRATEC SPECIFIC CONFIGURATION KEYS
+    // ============================================================================================
+
+    /**
+     * AIS Stream IO API key for authentication.
+     */
+    public static final ConfigKey<String> AISSTREAMIO_API_KEY = new StringConfigKey(
+            "aisstreamio.apiKey",
+            List.of(KeyType.CONFIG));
+
+    /**
+     * AIS Stream IO WebSocket server URI.
+     */
+    public static final ConfigKey<String> AISSTREAMIO_SERVER_URI = new StringConfigKey(
+            "aisstreamio.serverUri",
+            List.of(KeyType.CONFIG));
+
 }

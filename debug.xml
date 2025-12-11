@@ -11,6 +11,7 @@
     <entry key='media.path'>./target/media</entry>
 
     <entry key='logger.console'>true</entry>
+    <!--entry key='logger.level'>fine</entry-->
     <entry key='logger.queries'>false</entry>
     <entry key='logger.fullStackTraces'>true</entry>
 
@@ -26,11 +27,15 @@
 
     <entry key='atrack.custom'>true</entry>
     <entry key='intellitrac.port'>6037</entry>
-    <entry key='aisstream.port'>1</entry>
 
     <!--<entry key='web.port'>8083</entry>-->
     <!--<entry key='geolocation.port'>5056</entry>-->
 	
     <!-- ServiceUser Token -->
     <entry key='web.serviceAccountToken'>eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwiZW52Ijoic3RhZ2luZyIsImFkbWluIjp0cnVlLCJpYXQiOjE1MTYyMzkwMjJ9.3aeKmwcf2uZCV04qna1TfcUQ7Lzs0JmCxlUHT2F5fFM</entry>
+
+    <!-- AIS Stream IO Configuration -->
+    <!--entry key='aisstreamio.port'>1</entry>
+    <entry key='aisstreamio.apiKey'></entry>
+    <entry key='aisstreamio.serverUri'>wss://stream.aisstream.io/v0/stream</entry-->
 </properties>
