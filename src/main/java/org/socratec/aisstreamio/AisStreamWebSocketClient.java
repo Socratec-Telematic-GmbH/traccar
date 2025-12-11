@@ -22,9 +22,7 @@ import java.util.function.Consumer;
 public class AisStreamWebSocketClient extends WebSocketClient {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(AisStreamWebSocketClient.class);
-    private static final URI SERVER_URI = URI.create("wss://stream.aisstream.io/v0/stream");
     private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
-    private static final String API_KEY = "5ebb5e243d96cdbd029c600568de7be785c40c65";
     private static final double[][][] BOUNDING_BOX = new double[][][] {
         {{-90, -180}, {90, 180}}
     };
@@ -35,16 +33,21 @@ public class AisStreamWebSocketClient extends WebSocketClient {
             .optionalEnd()
             .appendPattern(" Z 'UTC'")
             .toFormatter();
+
+    private final String apiKey;
     private final Set<String> mmsis;
     private final Consumer<AISPositionReport> onMessageReceivedCallback;
     private final Runnable onConnectionClosedCallback;
 
     public AisStreamWebSocketClient(
+            String serverUri,
+            String apiKey,
             Set<String> mmsis,
             Consumer<AISPositionReport> onMessageReceivedCallback,
             Runnable onConnectionClosedCallback
     ) {
-        super(SERVER_URI);
+        super(URI.create(serverUri));
+        this.apiKey = apiKey;
         this.mmsis = mmsis;
         this.onMessageReceivedCallback = onMessageReceivedCallback;
         this.onConnectionClosedCallback = onConnectionClosedCallback;
@@ -52,7 +55,7 @@ public class AisStreamWebSocketClient extends WebSocketClient {
 
     @Override
     public void onOpen(ServerHandshake handshakedata) {
-        LOGGER.info("WebSocket connected for MMSI: {}", mmsis);
+        LOGGER.debug("WebSocket connected for MMSI: {}", mmsis);
 
         sendSubscribeMessage(mmsis);
     }
@@ -81,7 +84,7 @@ public class AisStreamWebSocketClient extends WebSocketClient {
             if (aisStreamIOMessage.getMessage() != null
                     && aisStreamIOMessage.getMessage().getPositionReport() != null) {
                 var position = getPosition(mmsi, aisStreamIOMessage);
-                LOGGER.info("Received AIS position report: {}", position);
+                LOGGER.debug("Received AIS position report: {}", position);
 
                 if (onMessageReceivedCallback != null) {
                     onMessageReceivedCallback.accept(position);
@@ -96,7 +99,7 @@ public class AisStreamWebSocketClient extends WebSocketClient {
 
     @Override
     public void onClose(int code, String reason, boolean remote) {
-        LOGGER.info("WebSocket closed- Code: {}, Reason: {}, Remote: {}", code, reason, remote);
+        LOGGER.debug("WebSocket closed- Code: {}, Reason: {}, Remote: {}", code, reason, remote);
         if (remote) {
             onConnectionClosedCallback.run();
         }
@@ -116,16 +119,16 @@ public class AisStreamWebSocketClient extends WebSocketClient {
             // Send subscription message
             var msg = createSubscriptionMessage(mmsis);
             send(msg);
-            LOGGER.info("Subscription message sent: {}", msg);
+            LOGGER.debug("Subscription message sent: {}", msg);
         } catch (Exception e) {
             LOGGER.error("Error sending subscription message for MMSI: {}", mmsis, e);
             close();
         }
     }
 
-    private static String createSubscriptionMessage(Set<String> mmsis) throws Exception {
+    private String createSubscriptionMessage(Set<String> mmsis) throws Exception {
         AISStreamIOSubscriptionMessage subscription = new AISStreamIOSubscriptionMessage(
-                AisStreamWebSocketClient.API_KEY,
+                this.apiKey,
                 List.of((Object) BOUNDING_BOX[0]),
                 mmsis.stream().toList(),
                 List.of("PositionReport")

@@ -1,9 +1,12 @@
 package org.socratec.aisstreamio;
 
+import jakarta.inject.Inject;
 import jakarta.inject.Singleton;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.socratec.aisstreamio.model.AISPositionReport;
+import org.traccar.config.Config;
+import org.traccar.config.Keys;
 
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
@@ -19,23 +22,41 @@ public class AisStreamService {
     private static final int MAX_RETRY_ATTEMPTS = 3;
     private static final long RECONNECT_DELAY_SECONDS = 10;
 
+    private final boolean isSuccessfullyConfigured;
     private final ScheduledExecutorService scheduler;
+    private final String serverUri;
+    private final String apiKey;
     private AisStreamWebSocketClient client;
     private final Set<String> connectionContexts = ConcurrentHashMap.newKeySet();
     private Consumer<AISPositionReport> messageProcessor;
 
-    public AisStreamService() {
+    @Inject
+    public AisStreamService(Config config) {
         this.scheduler = Executors.newScheduledThreadPool(1);
-        LOGGER.info("AIS Stream Service initialized");
+        this.serverUri = config.getString(Keys.AISSTREAMIO_SERVER_URI);
+        this.apiKey = config.getString(Keys.AISSTREAMIO_API_KEY);
+        if (serverUri == null || serverUri.isEmpty() || apiKey == null || apiKey.isEmpty()) {
+            LOGGER.debug("AIS Stream server URI or APIKey not configured. AIS Stream subscription won't be started.");
+            isSuccessfullyConfigured = false;
+            return;
+        }
+        isSuccessfullyConfigured = true;
+        LOGGER.debug("AIS Stream Service initialized");
     }
 
     public void subscribeAISStream(Set<String> mmsis, Consumer<AISPositionReport> messageProcessor) {
         this.messageProcessor = messageProcessor;
 
+        // Check if configuration is available
+        if (!isSuccessfullyConfigured) {
+            LOGGER.debug("AIS Stream not properly configured. Skipping AIS Stream subscription.");
+            return;
+        }
+
         // Scenario 1: No carriers to track - shutdown if running
         if (mmsis == null || mmsis.isEmpty()) {
             if (client != null && client.isOpen()) {
-                LOGGER.info("No carriers to track. Shutting down AIS Stream connection.");
+                LOGGER.debug("No carriers to track. Shutting down AIS Stream connection.");
                 shutdown();
             }
             return;
@@ -43,7 +64,7 @@ public class AisStreamService {
 
         // Scenario 2: Carriers exist but client not running - start the client
         if (client == null || !client.isOpen()) {
-            LOGGER.info("Client not running but carriers exist. Starting AIS Stream connection for {} carriers",
+            LOGGER.debug("Client not running but carriers exist. Starting AIS Stream connection for {} carriers",
                     mmsis.size());
             connectionContexts.clear();
             connectionContexts.addAll(mmsis);
@@ -53,7 +74,7 @@ public class AisStreamService {
 
         // Scenario 3: Compare current and new carrier sets
         if (!connectionContexts.equals(mmsis)) {
-            LOGGER.info("Carrier list changed. Updating subscriptions. Current: {}, New: {}",
+            LOGGER.debug("Carrier list changed. Updating subscriptions. Current: {}, New: {}",
                     connectionContexts.size(), mmsis.size());
 
             // Update connection contexts
@@ -62,7 +83,7 @@ public class AisStreamService {
 
             // Update WebSocket subscriptions
             client.updateSubscriptions(connectionContexts);
-            LOGGER.info("Updated AIS Stream subscriptions. Now tracking {} carriers", connectionContexts.size());
+            LOGGER.debug("Updated AIS Stream subscriptions. Now tracking {} carriers", connectionContexts.size());
         } else {
             LOGGER.debug("No changes detected in carrier list");
         }
@@ -70,6 +91,10 @@ public class AisStreamService {
 
     public Set<String> getCurrentTrackedCarriers() {
         return Set.copyOf(connectionContexts);
+    }
+
+    public boolean isSuccessfullyConfigured() {
+        return isSuccessfullyConfigured;
     }
 
     private void connectWithRetry(int attemptNumber) {
@@ -82,6 +107,8 @@ public class AisStreamService {
         try {
             // Create WebSocket client with cleanup and message received callbacks
             client = new AisStreamWebSocketClient(
+                    serverUri,
+                    apiKey,
                     connectionContexts,
                     this::processMessage,
                     () -> scheduleReconnection(attemptNumber)
@@ -91,7 +118,7 @@ public class AisStreamService {
             boolean connected = client.connectBlocking(30, TimeUnit.SECONDS);
 
             if (connected) {
-                LOGGER.info("Successfully connected to AIS Stream for MMSI: {} (attempt {})",
+                LOGGER.debug("Successfully connected to AIS Stream for MMSI: {} (attempt {})",
                         connectionContexts, attemptNumber);
             } else {
                 throw new Exception("Connection timeout");
@@ -112,7 +139,7 @@ public class AisStreamService {
     }
 
     private void scheduleReconnection(int attemptNumber) {
-        LOGGER.info("Scheduling reconnection for MMSI: {} in {} seconds", connectionContexts, RECONNECT_DELAY_SECONDS);
+        LOGGER.debug("Scheduling reconnection for MMSI: {} in {} seconds", connectionContexts, RECONNECT_DELAY_SECONDS);
 
         scheduler.schedule(
                 () -> connectWithRetry(attemptNumber + 1),
@@ -122,7 +149,7 @@ public class AisStreamService {
     }
 
     public void shutdown() {
-        LOGGER.info("Shutting down AIS Stream Service");
+        LOGGER.debug("Shutting down AIS Stream Service");
 
         // Shutdown the scheduler
         scheduler.shutdown();
@@ -131,7 +158,7 @@ public class AisStreamService {
                 scheduler.shutdownNow();
             }
 
-            LOGGER.info("AIS Stream Service shutdown complete");
+            LOGGER.debug("AIS Stream Service shutdown complete");
         } catch (Exception e) {
             LOGGER.error("Error during shutdown", e);
         }

@@ -8,21 +8,23 @@ import org.socratec.aisstreamio.AisMessageProcessor;
 import org.socratec.aisstreamio.AisStreamService;
 import org.traccar.BaseProtocol;
 import org.traccar.ProcessingHandler;
-import org.traccar.config.Config;
 import org.traccar.storage.Storage;
 
-public class AisStreamProtocol extends BaseProtocol {
+public class AisStreamIOProtocol extends BaseProtocol {
 
-    private static final Logger LOGGER = LoggerFactory.getLogger(AisStreamProtocol.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(AisStreamIOProtocol.class);
 
     @Inject
-    public AisStreamProtocol(
-            Config config,
+    public AisStreamIOProtocol(
             ProcessingHandler processingHandler,
             Storage storage,
             AisStreamService aisStreamService
     ) {
 
+        if (!aisStreamService.isSuccessfullyConfigured()) {
+            LOGGER.debug("AIS Stream Service not properly configured due to missing configuration (URI or APIKey).");
+            return;
+        }
         // Create synthetic channel with processing pipeline
         EmbeddedChannel syntheticChannel = new EmbeddedChannel(processingHandler);
         LOGGER.info("AIS Stream Protocol initialized with synthetic channel");
