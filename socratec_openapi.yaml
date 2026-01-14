@@ -1421,17 +1421,15 @@ components:
         type:
           $ref: '#/components/schemas/LogbookEntryType'
         startGeofences:
-          type: array
-          items:
-            $ref: '#/components/schemas/GeofenceInfo'
-          description: List of geofences associated with the trip's start position
+          type: string
+          description: Comma-separated list of geofence names associated with the trip's start position
           nullable: true
+          example: "Office, Parking Lot"
         endGeofences:
-          type: array
-          items:
-            $ref: '#/components/schemas/GeofenceInfo'
-          description: List of geofences associated with the trip's end position
+          type: string
+          description: Comma-separated list of geofence names associated with the trip's end position
           nullable: true
+          example: "Warehouse, Loading Dock"
       required:
         - deviceId
         - distance

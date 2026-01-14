@@ -20,7 +20,6 @@ import org.traccar.storage.QueryIgnore;
 import org.traccar.storage.StorageName;
 
 import java.util.Date;
-import java.util.List;
 
 /**
  * LogbookEntry model for tc_trips table
@@ -51,8 +50,8 @@ public class LogbookEntry extends BaseModel {
     private String notes;
     private LogbookEntryType type = LogbookEntryType.BUSINESS;
 
-    private List<GeofenceInfo> startGeofences;
-    private List<GeofenceInfo> endGeofences;
+    private String startGeofences;
+    private String endGeofences;
 
     public long getDeviceId() {
         return deviceId;
@@ -231,22 +230,22 @@ public class LogbookEntry extends BaseModel {
     }
 
     @QueryIgnore
-    public List<GeofenceInfo> getStartGeofences() {
+    public String getStartGeofences() {
         return startGeofences;
     }
 
     @QueryIgnore
-    public void setStartGeofences(List<GeofenceInfo> startGeofences) {
+    public void setStartGeofences(String startGeofences) {
         this.startGeofences = startGeofences;
     }
 
     @QueryIgnore
-    public List<GeofenceInfo> getEndGeofences() {
+    public String getEndGeofences() {
         return endGeofences;
     }
 
     @QueryIgnore
-    public void setEndGeofences(List<GeofenceInfo> endGeofences) {
+    public void setEndGeofences(String endGeofences) {
         this.endGeofences = endGeofences;
     }
 }

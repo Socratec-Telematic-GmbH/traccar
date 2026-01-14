@@ -14,7 +14,6 @@ import org.traccar.storage.query.Columns;
 import org.traccar.storage.query.Condition;
 import org.traccar.storage.query.Order;
 import org.traccar.storage.query.Request;
-import org.socratec.model.GeofenceInfo;
 import org.socratec.model.LogbookEntry;
 import org.socratec.model.LogbookEntryType;
 import org.traccar.model.Geofence;
@@ -37,9 +36,8 @@ import java.io.StringWriter;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.Date;
-import java.util.List;
+import java.util.stream.Collectors;
 
 public class LogbookReportProvider {
 
@@ -240,11 +238,11 @@ public class LogbookReportProvider {
     }
 
     /**
-     * Fetches geofence information for a given position ID
+     * Fetches geofence names for a given position ID as a comma-separated string
      */
-    private List<GeofenceInfo> getGeofencesForPosition(long positionId) throws StorageException {
+    private String getGeofencesForPosition(long positionId) throws StorageException {
         if (positionId == 0) {
-            return Collections.emptyList();
+            return "";
         }
 
         // Fetch the position
@@ -254,11 +252,11 @@ public class LogbookReportProvider {
         ));
 
         if (position == null || position.getGeofenceIds() == null || position.getGeofenceIds().isEmpty()) {
-            return Collections.emptyList();
+            return "";
         }
 
-        // Fetch geofences for the position's geofence IDs
-        List<GeofenceInfo> geofenceInfoList = new ArrayList<>();
+        // Fetch geofence names for the position's geofence IDs
+        ArrayList<String> geofenceNames = new ArrayList<>();
         for (Long geofenceId : position.getGeofenceIds()) {
             Geofence geofence = storage.getObject(Geofence.class, new Request(
                     new Columns.All(),
@@ -266,14 +264,10 @@ public class LogbookReportProvider {
             ));
 
             if (geofence != null) {
-                geofenceInfoList.add(new GeofenceInfo(
-                        geofence.getId(),
-                        geofence.getName(),
-                        geofence.getDescription()
-                ));
+                geofenceNames.add(geofence.getName());
             }
         }
 
-        return geofenceInfoList;
+        return geofenceNames.stream().collect(Collectors.joining(", "));
     }
 }

@@ -393,20 +393,8 @@
                     <td class="date-time">$dateTool.format("yyyy-MM-dd HH:mm", $entry.endTime, $locale, $timezone)</td>
                     <td class="address">#if($entry.startAddress)$entry.startAddress#else-#end</td>
                     <td class="address">#if($entry.endAddress)$entry.endAddress#else-#end</td>
-                    <td class="address">
-                        #if($entry.startGeofences && $entry.startGeofences.size() > 0)
-                            #foreach($geofence in $entry.startGeofences)
-                                $geofence.name#if($foreach.hasNext), #end
-                            #end
-                        #else-#end
-                    </td>
-                    <td class="address">
-                        #if($entry.endGeofences && $entry.endGeofences.size() > 0)
-                            #foreach($geofence in $entry.endGeofences)
-                                $geofence.name#if($foreach.hasNext), #end
-                            #end
-                        #else-#end
-                    </td>
+                    <td class="address">#if($entry.startGeofences)$entry.startGeofences#else-#end</td>
+                    <td class="address">#if($entry.endGeofences)$entry.endGeofences#else-#end</td>
                     <td class="number">
                         #if($distanceUnit.equals("mi"))
                             $numberTool.format('#0.##', $entry.startOdometer * 0.000621371)
