@@ -1420,6 +1420,18 @@ components:
           nullable: true
         type:
           $ref: '#/components/schemas/LogbookEntryType'
+        startGeofences:
+          type: array
+          items:
+            $ref: '#/components/schemas/GeofenceInfo'
+          description: List of geofences associated with the trip's start position
+          nullable: true
+        endGeofences:
+          type: array
+          items:
+            $ref: '#/components/schemas/GeofenceInfo'
+          description: List of geofences associated with the trip's end position
+          nullable: true
       required:
         - deviceId
         - distance
@@ -1545,6 +1557,29 @@ components:
       x-enum-descriptions:
         - "VESSEL (0): Maritime vessel carrier type (default)"
       example: 0
+    GeofenceInfo:
+      type: object
+      description: |
+        Lightweight DTO for geofence information.
+        Contains only essential geofence details (id, name, description) without the full geometry data.
+        Used in LogbookEntry to provide geofence context for trip start and end positions.
+      properties:
+        id:
+          type: integer
+          format: int64
+          description: Unique identifier for the geofence
+        name:
+          type: string
+          description: Name of the geofence
+          example: "Office"
+        description:
+          type: string
+          description: Description of the geofence
+          nullable: true
+          example: "Main office location"
+      required:
+        - id
+        - name
   requestBodies:
     Trip:
       content:

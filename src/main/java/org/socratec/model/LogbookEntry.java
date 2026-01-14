@@ -16,9 +16,11 @@
 package org.socratec.model;
 
 import org.traccar.model.BaseModel;
+import org.traccar.storage.QueryIgnore;
 import org.traccar.storage.StorageName;
 
 import java.util.Date;
+import java.util.List;
 
 /**
  * LogbookEntry model for tc_trips table
@@ -48,6 +50,9 @@ public class LogbookEntry extends BaseModel {
     private String hash;
     private String notes;
     private LogbookEntryType type = LogbookEntryType.BUSINESS;
+
+    private List<GeofenceInfo> startGeofences;
+    private List<GeofenceInfo> endGeofences;
 
     public long getDeviceId() {
         return deviceId;
@@ -223,5 +228,25 @@ public class LogbookEntry extends BaseModel {
 
     public void setType(LogbookEntryType type) {
         this.type = type != null ? type : LogbookEntryType.BUSINESS;
+    }
+
+    @QueryIgnore
+    public List<GeofenceInfo> getStartGeofences() {
+        return startGeofences;
+    }
+
+    @QueryIgnore
+    public void setStartGeofences(List<GeofenceInfo> startGeofences) {
+        this.startGeofences = startGeofences;
+    }
+
+    @QueryIgnore
+    public List<GeofenceInfo> getEndGeofences() {
+        return endGeofences;
+    }
+
+    @QueryIgnore
+    public void setEndGeofences(List<GeofenceInfo> endGeofences) {
+        this.endGeofences = endGeofences;
     }
 }
