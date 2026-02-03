@@ -37,7 +37,6 @@ import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Date;
-import java.util.stream.Collectors;
 
 public class LogbookReportProvider {
 
@@ -268,6 +267,6 @@ public class LogbookReportProvider {
             }
         }
 
-        return geofenceNames.stream().collect(Collectors.joining(", "));
+        return String.join(", ", geofenceNames);
     }
 }

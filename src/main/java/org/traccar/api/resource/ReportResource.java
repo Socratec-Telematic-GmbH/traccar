@@ -18,7 +18,9 @@ package org.traccar.api.resource;
 
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.ws.rs.core.Context;
+import org.socratec.model.GeofenceVisit;
 import org.socratec.model.LogbookEntry;
+import org.socratec.reports.GeofenceVisitReportProvider;
 import org.socratec.reports.LogbookReportProvider;
 import org.traccar.api.SimpleObjectResource;
 import org.traccar.helper.LogAction;
@@ -364,10 +366,13 @@ public class ReportResource extends SimpleObjectResource<Report> {
         });
     }
 
-    // Added Socratec specific report
+    // Added Socratec specific reports
 
     @Inject
     private LogbookReportProvider logbookReportProvider;
+
+    @Inject
+    private GeofenceVisitReportProvider geofenceVisitReportProvider;
 
     @Path("logbook")
     @GET
@@ -435,5 +440,45 @@ public class ReportResource extends SimpleObjectResource<Report> {
             @QueryParam("to") Date to,
             @PathParam("type") String type) throws StorageException {
         return getLogbookPdf(deviceIds, groupIds, from, to, type.equals("mail"));
+    }
+
+    @Path("geofence-visits")
+    @GET
+    public Collection<GeofenceVisit> getGeofenceVisits(
+            @QueryParam("deviceId") List<Long> deviceIds,
+            @QueryParam("groupId") List<Long> groupIds,
+            @QueryParam("from") Date from,
+            @QueryParam("to") Date to) throws StorageException {
+        permissionsService.checkRestriction(getUserId(), UserRestrictions::getDisableReports);
+        actionLogger.report(request, getUserId(), false, "geofence-visits", from, to, deviceIds, groupIds);
+        return geofenceVisitReportProvider.getObjects(getUserId(), deviceIds, groupIds, from, to);
+    }
+
+    @Path("geofence-visits")
+    @GET
+    @Produces(EXCEL)
+    public Response getGeofenceVisitsExcel(
+            @QueryParam("deviceId") List<Long> deviceIds,
+            @QueryParam("groupId") List<Long> groupIds,
+            @QueryParam("from") Date from,
+            @QueryParam("to") Date to,
+            @QueryParam("mail") boolean mail) throws StorageException {
+        permissionsService.checkRestriction(getUserId(), UserRestrictions::getDisableReports);
+        return executeReport(getUserId(), mail, stream -> {
+            actionLogger.report(request, getUserId(), false, "geofence-visits", from, to, deviceIds, groupIds);
+            geofenceVisitReportProvider.getExcel(stream, getUserId(), deviceIds, groupIds, from, to);
+        });
+    }
+
+    @Path("geofence-visits/{type:xlsx|mail}")
+    @GET
+    @Produces(EXCEL)
+    public Response getGeofenceVisitsExcel(
+            @QueryParam("deviceId") List<Long> deviceIds,
+            @QueryParam("groupId") List<Long> groupIds,
+            @QueryParam("from") Date from,
+            @QueryParam("to") Date to,
+            @PathParam("type") String type) throws StorageException {
+        return getGeofenceVisitsExcel(deviceIds, groupIds, from, to, type.equals("mail"));
     }
 }
