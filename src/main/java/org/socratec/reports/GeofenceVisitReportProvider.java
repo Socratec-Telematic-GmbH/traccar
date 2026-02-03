@@ -1,6 +1,7 @@
 package org.socratec.reports;
 
 import jakarta.inject.Inject;
+import org.jxls.util.JxlsHelper;
 import org.socratec.model.GeofenceVisit;
 import org.traccar.config.Config;
 import org.traccar.config.Keys;
@@ -110,10 +111,11 @@ public class GeofenceVisitReportProvider {
         File file = Paths.get(config.getString(Keys.TEMPLATES_ROOT), "export", "geofence-visits.xlsx").toFile();
         try (InputStream inputStream = new FileInputStream(file)) {
             var context = reportUtils.initializeContext(userId);
-            context.putVar("visits", visits);
+            context.putVar("items", visits);
             context.putVar("from", from);
             context.putVar("to", to);
-            reportUtils.processTemplateWithSheets(inputStream, outputStream, context);
+            JxlsHelper.getInstance().setUseFastFormulaProcessor(false)
+                    .processTemplate(inputStream, outputStream, context);
         }
     }
 }
