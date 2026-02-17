@@ -1094,6 +1094,225 @@ paths:
         '500':
           description: Internal server error
           content: {}
+  /reports/geofence-visits:
+    get:
+      summary: Get geofence visits report (JSON)
+      description: |
+        Generate a report showing how many times devices visited geofences within a specified time period.
+        Returns GeofenceVisit objects in JSON format with visit counts grouped by device and geofence.
+      tags:
+        - Reports
+      parameters:
+        - name: deviceId
+          in: query
+          description: |
+            List of device IDs to include. Multiple device IDs can be specified.
+          required: false
+          schema:
+            type: array
+            items:
+              type: integer
+              format: int64
+          style: form
+          explode: true
+          example: [1, 2, 3]
+        - name: groupId
+          in: query
+          description: |
+            List of group IDs to include. All devices in the specified groups will be included.
+            Multiple group IDs can be specified.
+          required: false
+          schema:
+            type: array
+            items:
+              type: integer
+              format: int64
+          style: form
+          explode: true
+          example: [1, 2]
+        - name: from
+          in: query
+          description: |
+            Start date and time for filtering in ISO 8601 format.
+            Only geofence enter events on or after this date will be counted.
+          required: true
+          schema:
+            type: string
+            format: date-time
+          example: "2024-01-01T00:00:00.000Z"
+        - name: to
+          in: query
+          description: |
+            End date and time for filtering in ISO 8601 format.
+            Only geofence enter events on or before this date will be counted.
+          required: true
+          schema:
+            type: string
+            format: date-time
+          example: "2024-01-31T23:59:59.999Z"
+      responses:
+        '200':
+          description: |
+            Successfully retrieved geofence visit statistics.
+            Results show visit counts grouped by device and geofence.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/GeofenceVisit'
+              example:
+                - deviceId: 1
+                  deviceName: "Vehicle 123"
+                  deviceUniqueId: "123456789"
+                  geofenceId: 5
+                  geofenceName: "Warehouse A"
+                  visitCount: 15
+                - deviceId: 1
+                  deviceName: "Vehicle 123"
+                  deviceUniqueId: "123456789"
+                  geofenceId: 7
+                  geofenceName: "Office"
+                  visitCount: 8
+                - deviceId: 2
+                  deviceName: "Vehicle 456"
+                  deviceUniqueId: "987654321"
+                  geofenceId: 5
+                  geofenceName: "Warehouse A"
+                  visitCount: 22
+        '400':
+          description: |
+            Bad request. This can occur when:
+            - Required parameters (from, to) are missing
+            - Date format is incorrect
+            - Date range exceeds configured limits
+            - Invalid parameter values
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    example: "Both 'from' and 'to' parameters are required"
+        '401':
+          description: Unauthorized - Authentication required
+          content: {}
+        '403':
+          description: |
+            Forbidden - User does not have permission to access the specified devices or groups,
+            or reports are disabled for this user.
+          content: {}
+        '500':
+          description: Internal server error
+          content: {}
+  /reports/geofence-visits/{type}:
+    get:
+      summary: Get geofence visits report (Excel)
+      description: |
+        Endpoint for generating geofence visit reports in Excel format or sending via email.
+        Supports 'xlsx' for Excel download and 'mail' for email delivery.
+        Returns a formatted Excel file with visit statistics grouped by device and geofence.
+      tags:
+        - Reports
+      parameters:
+        - name: type
+          in: path
+          required: true
+          description: Report delivery type - 'xlsx' for Excel download, 'mail' for email
+          schema:
+            type: string
+            enum: [xlsx, mail]
+          example: "xlsx"
+        - name: deviceId
+          in: query
+          description: |
+            List of device IDs to include. Multiple device IDs can be specified.
+          required: false
+          schema:
+            type: array
+            items:
+              type: integer
+              format: int64
+          style: form
+          explode: true
+          example: [1, 2, 3]
+        - name: groupId
+          in: query
+          description: |
+            List of group IDs to include. All devices in the specified groups will be included.
+            Multiple group IDs can be specified.
+          required: false
+          schema:
+            type: array
+            items:
+              type: integer
+              format: int64
+          style: form
+          explode: true
+          example: [1, 2]
+        - name: from
+          in: query
+          description: |
+            Start date and time for filtering in ISO 8601 format.
+            Only geofence enter events on or after this date will be counted.
+          required: true
+          schema:
+            type: string
+            format: date-time
+          example: "2024-01-01T00:00:00.000Z"
+        - name: to
+          in: query
+          description: |
+            End date and time for filtering in ISO 8601 format.
+            Only geofence enter events on or before this date will be counted.
+          required: true
+          schema:
+            type: string
+            format: date-time
+          example: "2024-01-31T23:59:59.999Z"
+      responses:
+        '200':
+          description: |
+            Successfully generated geofence visits report for direct download.
+            Returns an Excel file with visit statistics grouped by device and geofence.
+          content:
+            application/vnd.openxmlformats-officedocument.spreadsheetml.sheet:
+              schema:
+                type: string
+                format: binary
+          headers:
+            Content-Disposition:
+              description: Attachment header with filename
+              schema:
+                type: string
+                example: "attachment; filename=report.xlsx"
+        '204':
+          description: |
+            Email successfully dispatched (type=mail).
+            The geofence visits report has been sent to the user's email address.
+            No content is returned in the response body.
+          content: {}
+        '400':
+          description: |
+            Bad request. This can occur when:
+            - Required parameters (from, to) are missing
+            - Date format is incorrect
+            - Date range exceeds configured limits
+            - Invalid parameter values
+            - Invalid type parameter (must be 'xlsx' or 'mail')
+          content: {}
+        '401':
+          description: Unauthorized - Authentication required
+          content: {}
+        '403':
+          description: |
+            Forbidden - User does not have permission to access the specified devices or groups,
+            or reports are disabled for this user.
+          content: {}
+        '500':
+          description: Internal server error
+          content: {}
   /reports/logbook/{type}:
     get:
       summary: Get logbook report (Excel/PDF)
@@ -1420,6 +1639,16 @@ components:
           nullable: true
         type:
           $ref: '#/components/schemas/LogbookEntryType'
+        startGeofences:
+          type: string
+          description: Comma-separated list of geofence names associated with the trip's start position
+          nullable: true
+          example: "Office, Parking Lot"
+        endGeofences:
+          type: string
+          description: Comma-separated list of geofence names associated with the trip's end position
+          nullable: true
+          example: "Warehouse, Loading Dock"
       required:
         - deviceId
         - distance
@@ -1545,6 +1774,67 @@ components:
       x-enum-descriptions:
         - "VESSEL (0): Maritime vessel carrier type (default)"
       example: 0
+    GeofenceInfo:
+      type: object
+      description: |
+        Lightweight DTO for geofence information.
+        Contains only essential geofence details (id, name, description) without the full geometry data.
+        Used in LogbookEntry to provide geofence context for trip start and end positions.
+      properties:
+        id:
+          type: integer
+          format: int64
+          description: Unique identifier for the geofence
+        name:
+          type: string
+          description: Name of the geofence
+          example: "Office"
+        description:
+          type: string
+          description: Description of the geofence
+          nullable: true
+          example: "Main office location"
+      required:
+        - id
+        - name
+    GeofenceVisit:
+      type: object
+      description: |
+        Represents statistics about how many times a device visited a specific geofence.
+        Contains device and geofence identification along with the visit count for a given time period.
+      properties:
+        deviceId:
+          type: integer
+          format: int64
+          description: ID of the device
+        deviceName:
+          type: string
+          description: Name of the device
+          example: "Vehicle 123"
+        deviceUniqueId:
+          type: string
+          description: Unique identifier of the device
+          example: "123456789"
+        geofenceId:
+          type: integer
+          format: int64
+          description: ID of the geofence
+        geofenceName:
+          type: string
+          description: Name of the geofence
+          example: "Warehouse A"
+        visitCount:
+          type: integer
+          description: Number of times the device entered this geofence during the specified time period
+          minimum: 1
+          example: 15
+      required:
+        - deviceId
+        - deviceName
+        - deviceUniqueId
+        - geofenceId
+        - geofenceName
+        - visitCount
   requestBodies:
     Trip:
       content:

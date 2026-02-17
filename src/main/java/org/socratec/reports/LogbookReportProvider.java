@@ -16,6 +16,8 @@ import org.traccar.storage.query.Order;
 import org.traccar.storage.query.Request;
 import org.socratec.model.LogbookEntry;
 import org.socratec.model.LogbookEntryType;
+import org.traccar.model.Geofence;
+import org.traccar.model.Position;
 
 import com.itextpdf.html2pdf.ConverterProperties;
 import com.itextpdf.html2pdf.HtmlConverter;
@@ -73,6 +75,10 @@ public class LogbookReportProvider {
                     ),
                     new Order("startTime")
             ));
+            // Enrich with geofence information
+            for (LogbookEntry entry : logbookEntries) {
+                enrichWithGeofences(entry);
+            }
             result.addAll(logbookEntries);
         }
         return result;
@@ -159,6 +165,10 @@ public class LogbookReportProvider {
                     ),
                     new Order("startTime")
             ));
+            // Enrich with geofence information
+            for (LogbookEntry entry : logbookEntries) {
+                enrichWithGeofences(entry);
+            }
             LogbookReportSection deviceLogbook = new LogbookReportSection();
             deviceLogbook.setDeviceName(device.getName());
             if (device.getGroupId() > 0) {
@@ -213,5 +223,50 @@ public class LogbookReportProvider {
             privateDistance, businessDistance,
             privateDuration, businessDuration
         );
+    }
+
+    /**
+     * Enriches a LogbookEntry with geofence information from start and end positions
+     */
+    private void enrichWithGeofences(LogbookEntry entry) throws StorageException {
+        // Fetch and set start geofences
+        entry.setStartGeofences(getGeofencesForPosition(entry.getStartPositionId()));
+
+        // Fetch and set end geofences
+        entry.setEndGeofences(getGeofencesForPosition(entry.getEndPositionId()));
+    }
+
+    /**
+     * Fetches geofence names for a given position ID as a comma-separated string
+     */
+    private String getGeofencesForPosition(long positionId) throws StorageException {
+        if (positionId == 0) {
+            return "";
+        }
+
+        // Fetch the position
+        Position position = storage.getObject(Position.class, new Request(
+                new Columns.All(),
+                new Condition.Equals("id", positionId)
+        ));
+
+        if (position == null || position.getGeofenceIds() == null || position.getGeofenceIds().isEmpty()) {
+            return "";
+        }
+
+        // Fetch geofence names for the position's geofence IDs
+        ArrayList<String> geofenceNames = new ArrayList<>();
+        for (Long geofenceId : position.getGeofenceIds()) {
+            Geofence geofence = storage.getObject(Geofence.class, new Request(
+                    new Columns.All(),
+                    new Condition.Equals("id", geofenceId)
+            ));
+
+            if (geofence != null) {
+                geofenceNames.add(geofence.getName());
+            }
+        }
+
+        return String.join(", ", geofenceNames);
     }
 }
