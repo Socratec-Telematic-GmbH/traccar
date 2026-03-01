@@ -35,11 +35,16 @@ public class LinkMobilitySmsClient implements SmsManager {
 
     @Override
     public void sendMessage(String phone, String message, boolean command) throws MessageException {
+        String normalized = phone.replaceAll("[^0-9]", "");
+        if (normalized.startsWith("00")) {
+            normalized = normalized.substring(2);
+        }
+
         Map<String, Object> body = new LinkedHashMap<>();
         body.put("messageContent", message);
 
         List<String> recipients = new ArrayList<>();
-        recipients.add(phone);
+        recipients.add(normalized);
         body.put("recipientAddressList", recipients);
         body.put("contentCategory", "informational");
 
