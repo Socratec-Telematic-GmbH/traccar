@@ -57,12 +57,17 @@ public class NotificatorWhatsApp extends Notificator {
             return;
         }
 
+        String phone = user.getPhone().replaceAll("[^0-9]", "");
+        if (phone.startsWith("00")) {
+            phone = phone.substring(2);
+        }
+
         Map<String, Object> whatsappContent = new LinkedHashMap<>();
         whatsappContent.put("type", "text");
         whatsappContent.put("text", Map.of("body", message.getBody()));
 
         Map<String, Object> whatsappMessage = new LinkedHashMap<>();
-        whatsappMessage.put("recipientAddress", user.getPhone());
+        whatsappMessage.put("recipientAddress", phone);
         whatsappMessage.put("messageContent", whatsappContent);
 
         Map<String, Object> messageWrapper = new LinkedHashMap<>();
@@ -71,7 +76,7 @@ public class NotificatorWhatsApp extends Notificator {
 
         if (smsFallback) {
             Map<String, Object> smsMessage = new LinkedHashMap<>();
-            smsMessage.put("recipientAddress", user.getPhone());
+            smsMessage.put("recipientAddress", phone);
             smsMessage.put("messageContent", message.getBody());
 
             Map<String, Object> fallback = new LinkedHashMap<>();
