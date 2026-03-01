@@ -165,7 +165,7 @@ public class MainModule extends AbstractModule {
             return new HttpSmsClient(config, client);
         } else if (config.hasKey(Keys.SMS_AWS_REGION)) {
             return new SnsSmsClient(config);
-        } else if (config.hasKey(Keys.SMS_LINKMOBILITY_SMS_CHANNEL_UUID)) {
+        } else if (config.getBoolean(Keys.SMS_LINKMOBILITY_ENABLE)) {
             return new LinkMobilitySmsClient(config, client);
         }
         return null;

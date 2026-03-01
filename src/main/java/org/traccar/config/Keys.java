@@ -2045,12 +2045,12 @@ public final class Keys {
             List.of(KeyType.CONFIG));
 
     /**
-     * LINK Mobility channel UUID for the SMS channel.
-     * Presence of this key activates the LINK Mobility SMS client.
+     * Enable the LINK Mobility SMS client.
      */
-    public static final ConfigKey<String> SMS_LINKMOBILITY_SMS_CHANNEL_UUID = new StringConfigKey(
-            "sms.linkmobility.smsChannelUuid",
-            List.of(KeyType.CONFIG));
+    public static final ConfigKey<Boolean> SMS_LINKMOBILITY_ENABLE = new BooleanConfigKey(
+            "sms.linkmobility.enable",
+            List.of(KeyType.CONFIG),
+            false);
 
     /**
      * LINK Mobility channel UUID for the WhatsApp omnichannel channel.
