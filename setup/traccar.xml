@@ -18,6 +18,8 @@
     <entry key='mail.smtp.username'>smc@socratec.gmbh</entry>
     <entry key='mail.smtp.password'>Traccar321$%&amp;</entry>
 
+    <entry key='notificator.types'>web,mail,sms,whatsapp</entry>
+
     <!-- LINK Mobility -->
     <entry key='sms.linkmobility.enable'>true</entry>
     <entry key='sms.linkmobility.token'>121b7af0-16b6-4415-90bc-e55e31d7eb14</entry>
