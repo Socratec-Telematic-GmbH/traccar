@@ -18,6 +18,13 @@
     <entry key='mail.smtp.username'>smc@socratec.gmbh</entry>
     <entry key='mail.smtp.password'>Traccar321$%&amp;</entry>
 
+    <!-- LINK Mobility -->
+    <entry key='sms.linkmobility.enable'>true</entry>
+    <entry key='sms.linkmobility.token'>121b7af0-16b6-4415-90bc-e55e31d7eb14</entry>
+    <entry key='sms.linkmobility.whatsappChannelUuid'>c6de4273-b880-41b9-8e28-799c60d58cb2</entry>
+    <entry key='sms.linkmobility.sender'>Socratec</entry>
+    <entry key='sms.linkmobility.smsFallback'>true</entry>
+
     <entry key='geocoder.enable'>true</entry>
     <entry key='geocoder.type'>locationiq</entry>
     <entry key='geocoder.key'>ddbd06eb64cd5604195d</entry>

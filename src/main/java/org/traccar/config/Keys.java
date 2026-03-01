@@ -2029,4 +2029,52 @@ public final class Keys {
             "aisstreamio.serverUri",
             List.of(KeyType.CONFIG));
 
+    /**
+     * LINK Mobility API base URL. Defaults to https://api.linkmobility.eu
+     */
+    public static final ConfigKey<String> SMS_LINKMOBILITY_URL = new StringConfigKey(
+            "sms.linkmobility.url",
+            List.of(KeyType.CONFIG),
+            "https://api.linkmobility.eu");
+
+    /**
+     * LINK Mobility Bearer token for authentication.
+     */
+    public static final ConfigKey<String> SMS_LINKMOBILITY_TOKEN = new StringConfigKey(
+            "sms.linkmobility.token",
+            List.of(KeyType.CONFIG));
+
+    /**
+     * Enable the LINK Mobility SMS client.
+     */
+    public static final ConfigKey<Boolean> SMS_LINKMOBILITY_ENABLE = new BooleanConfigKey(
+            "sms.linkmobility.enable",
+            List.of(KeyType.CONFIG),
+            false);
+
+    /**
+     * LINK Mobility channel UUID for the WhatsApp omnichannel channel.
+     * Required by the WhatsApp notificator.
+     */
+    public static final ConfigKey<String> SMS_LINKMOBILITY_WHATSAPP_CHANNEL_UUID = new StringConfigKey(
+            "sms.linkmobility.whatsappChannelUuid",
+            List.of(KeyType.CONFIG));
+
+    /**
+     * Include an SMS fallback in WhatsApp messages sent via LINK Mobility.
+     * When true, a fallback SMS is triggered if the WhatsApp message fails.
+     * Defaults to true.
+     */
+    public static final ConfigKey<Boolean> SMS_LINKMOBILITY_SMS_FALLBACK = new BooleanConfigKey(
+            "sms.linkmobility.smsFallback",
+            List.of(KeyType.CONFIG),
+            true);
+
+    /**
+     * Optional alphanumeric sender ID used in LINK Mobility SMS messages.
+     */
+    public static final ConfigKey<String> SMS_LINKMOBILITY_SENDER = new StringConfigKey(
+            "sms.linkmobility.sender",
+            List.of(KeyType.CONFIG));
+
 }

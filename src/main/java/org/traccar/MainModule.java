@@ -90,6 +90,7 @@ import org.traccar.mail.SmtpMailManager;
 import org.traccar.push.FirebaseClient;
 import org.traccar.push.PushCommandManager;
 import org.traccar.session.cache.CacheManager;
+import org.socratec.sms.LinkMobilitySmsClient;
 import org.traccar.sms.HttpSmsClient;
 import org.traccar.sms.SmsManager;
 import org.traccar.sms.SnsSmsClient;
@@ -164,6 +165,8 @@ public class MainModule extends AbstractModule {
             return new HttpSmsClient(config, client);
         } else if (config.hasKey(Keys.SMS_AWS_REGION)) {
             return new SnsSmsClient(config);
+        } else if (config.getBoolean(Keys.SMS_LINKMOBILITY_ENABLE)) {
+            return new LinkMobilitySmsClient(config, client);
         }
         return null;
     }
