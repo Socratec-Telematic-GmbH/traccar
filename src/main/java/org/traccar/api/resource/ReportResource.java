@@ -481,4 +481,32 @@ public class ReportResource extends SimpleObjectResource<Report> {
             @PathParam("type") String type) throws StorageException {
         return getGeofenceVisitsExcel(deviceIds, groupIds, from, to, type.equals("mail"));
     }
+
+    @Path("geofence-visits")
+    @GET
+    @Produces("application/pdf")
+    public Response getGeofenceVisitsPdf(
+            @QueryParam("deviceId") List<Long> deviceIds,
+            @QueryParam("groupId") List<Long> groupIds,
+            @QueryParam("from") Date from,
+            @QueryParam("to") Date to,
+            @QueryParam("mail") boolean mail) throws StorageException {
+        permissionsService.checkRestriction(getUserId(), UserRestrictions::getDisableReports);
+        return executePdfReport(getUserId(), mail, stream -> {
+            actionLogger.report(request, getUserId(), false, "geofence-visits", from, to, deviceIds, groupIds);
+            geofenceVisitReportProvider.getPdf(stream, getUserId(), deviceIds, groupIds, from, to);
+        });
+    }
+
+    @Path("geofence-visits/{type:pdf|mail}")
+    @GET
+    @Produces("application/pdf")
+    public Response getGeofenceVisitsPdf(
+            @QueryParam("deviceId") List<Long> deviceIds,
+            @QueryParam("groupId") List<Long> groupIds,
+            @QueryParam("from") Date from,
+            @QueryParam("to") Date to,
+            @PathParam("type") String type) throws StorageException {
+        return getGeofenceVisitsPdf(deviceIds, groupIds, from, to, type.equals("mail"));
+    }
 }

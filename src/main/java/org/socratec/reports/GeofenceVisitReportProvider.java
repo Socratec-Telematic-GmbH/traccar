@@ -1,6 +1,12 @@
 package org.socratec.reports;
 
+import com.itextpdf.html2pdf.ConverterProperties;
+import com.itextpdf.html2pdf.HtmlConverter;
+import com.itextpdf.kernel.geom.PageSize;
+import com.itextpdf.kernel.pdf.PdfDocument;
+import com.itextpdf.kernel.pdf.PdfWriter;
 import jakarta.inject.Inject;
+import org.apache.velocity.app.VelocityEngine;
 import org.jxls.util.JxlsHelper;
 import org.socratec.model.GeofenceVisit;
 import org.traccar.config.Config;
@@ -21,6 +27,7 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.io.StringWriter;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -99,6 +106,47 @@ public class GeofenceVisitReportProvider {
         }
 
         return result;
+    }
+
+    public void getPdf(OutputStream outputStream,
+            long userId, Collection<Long> deviceIds, Collection<Long> groupIds,
+            Date from, Date to) throws StorageException, IOException {
+        reportUtils.checkPeriodLimit(from, to);
+
+        Collection<GeofenceVisit> visits = getObjects(userId, deviceIds, groupIds, from, to);
+
+        // Initialize Velocity Engine
+        VelocityEngine velocityEngine = new VelocityEngine();
+        velocityEngine.setProperty("resource.loaders", "file");
+        velocityEngine.setProperty("resource.loader.file.class",
+                "org.apache.velocity.runtime.resource.loader.FileResourceLoader");
+        velocityEngine.setProperty("resource.loader.file.path",
+                config.getString(Keys.TEMPLATES_ROOT) + "/export");
+        velocityEngine.init();
+
+        // Create Velocity Context using reportUtils for consistency
+        var velocityContext = reportUtils.initializeVelocityContext(userId);
+        velocityContext.put("items", visits);
+        velocityContext.put("from", from);
+        velocityContext.put("to", to);
+
+        // Process template
+        StringWriter writer = new StringWriter();
+        velocityEngine.getTemplate("geofence-visits.vm").merge(velocityContext, writer);
+        String htmlContent = writer.toString();
+
+        // Create PDF document with landscape orientation
+        PdfWriter pdfWriter = new PdfWriter(outputStream);
+        PdfDocument pdfDocument = new PdfDocument(pdfWriter);
+        pdfDocument.setDefaultPageSize(PageSize.A4.rotate());
+
+        // Configure converter properties
+        ConverterProperties converterProperties = new ConverterProperties();
+
+        // Convert HTML to PDF
+        HtmlConverter.convertToPdf(htmlContent, pdfDocument, converterProperties);
+
+        pdfDocument.close();
     }
 
     public void getExcel(OutputStream outputStream,

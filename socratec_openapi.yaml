@@ -1208,21 +1208,21 @@ paths:
           content: {}
   /reports/geofence-visits/{type}:
     get:
-      summary: Get geofence visits report (Excel)
+      summary: Get geofence visits report (Excel/PDF)
       description: |
-        Endpoint for generating geofence visit reports in Excel format or sending via email.
-        Supports 'xlsx' for Excel download and 'mail' for email delivery.
-        Returns a formatted Excel file with visit statistics grouped by device and geofence.
+        Endpoint for generating geofence visit reports in multiple formats or sending via email.
+        Supports 'xlsx' for Excel download, 'pdf' for PDF download, and 'mail' for email delivery.
+        Returns a formatted file with visit statistics grouped by device and geofence.
       tags:
         - Reports
       parameters:
         - name: type
           in: path
           required: true
-          description: Report delivery type - 'xlsx' for Excel download, 'mail' for email
+          description: Report delivery type - 'xlsx' for Excel download, 'pdf' for PDF download, 'mail' for email
           schema:
             type: string
-            enum: [xlsx, mail]
+            enum: [xlsx, pdf, mail]
           example: "xlsx"
         - name: deviceId
           in: query
@@ -1275,9 +1275,14 @@ paths:
         '200':
           description: |
             Successfully generated geofence visits report for direct download.
-            Returns an Excel file with visit statistics grouped by device and geofence.
+            For type=xlsx: Returns an Excel file with visit statistics grouped by device and geofence.
+            For type=pdf: Returns a PDF document with formatted visit statistics in landscape A4 layout.
           content:
             application/vnd.openxmlformats-officedocument.spreadsheetml.sheet:
+              schema:
+                type: string
+                format: binary
+            application/pdf:
               schema:
                 type: string
                 format: binary
@@ -1300,7 +1305,7 @@ paths:
             - Date format is incorrect
             - Date range exceeds configured limits
             - Invalid parameter values
-            - Invalid type parameter (must be 'xlsx' or 'mail')
+            - Invalid type parameter (must be 'xlsx', 'pdf', or 'mail')
           content: {}
         '401':
           description: Unauthorized - Authentication required

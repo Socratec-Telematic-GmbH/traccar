@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Besuchte Orte Report</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+            font-size: 12px;
+            color: #333;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+            border-bottom: 2px solid #333;
+            padding-bottom: 10px;
+        }
+
+        .header h1 {
+            margin: 0;
+            font-size: 24px;
+            color: #333;
+        }
+
+        .header .period {
+            margin: 10px 0;
+            font-size: 14px;
+            color: #666;
+        }
+
+        .visits-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 10px;
+            table-layout: fixed;
+            box-sizing: border-box;
+        }
+
+        .visits-table th,
+        .visits-table td {
+            border: 1px solid #ddd;
+            padding: 8px;
+            text-align: left;
+            font-size: 11px;
+            overflow: hidden;
+            word-wrap: break-word;
+        }
+
+        .visits-table th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+            color: #333;
+        }
+
+        .visits-table tr:nth-child(even) {
+            background-color: #f9f9f9;
+        }
+
+        .visits-table th:nth-child(1),
+        .visits-table td:nth-child(1) {
+            width: 30%;
+        }
+
+        .visits-table th:nth-child(2),
+        .visits-table td:nth-child(2) {
+            width: 25%;
+        }
+
+        .visits-table th:nth-child(3),
+        .visits-table td:nth-child(3) {
+            width: 35%;
+        }
+
+        .visits-table th:nth-child(4),
+        .visits-table td:nth-child(4) {
+            width: 10%;
+            text-align: right;
+        }
+
+        .visits-table td:nth-child(4) {
+            text-align: right;
+        }
+
+        .no-entries {
+            text-align: center;
+            color: #666;
+            font-style: italic;
+            padding: 20px;
+        }
+
+        .footer {
+            margin-top: 30px;
+            padding-top: 10px;
+            border-top: 1px solid #ddd;
+            text-align: center;
+            font-size: 10px;
+            color: #666;
+        }
+
+        @media print {
+            body {
+                margin: 0;
+                padding: 10px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>Besuchte Orte</h1>
+        <div class="period">
+            Periode: $dateTool.format("yyyy-MM-dd HH:mm", $from, $locale, $timezone) - $dateTool.format("yyyy-MM-dd HH:mm", $to, $locale, $timezone)
+        </div>
+    </div>
+
+    #if($items && $items.size() > 0)
+    <table class="visits-table">
+        <thead>
+            <tr>
+                <th>Fahrzeug</th>
+                <th>Fahrzeug-ID</th>
+                <th>Geofence</th>
+                <th>Besuche</th>
+            </tr>
+        </thead>
+        <tbody>
+            #foreach($item in $items)
+            <tr>
+                <td>$item.deviceName</td>
+                <td>$item.deviceUniqueId</td>
+                <td>$item.geofenceName</td>
+                <td style="text-align: right;">$item.visitCount</td>
+            </tr>
+            #end
+        </tbody>
+    </table>
+    #else
+    <div class="no-entries">Keine Geofence-Besuche für diesen Zeitraum gefunden.</div>
+    #end
+
+    <div class="footer">
+        Generiert am $dateTool.format("yyyy-MM-dd HH:mm:ss", $dateTool.getDate(), $locale, $timezone)
+    </div>
+</body>
+</html>
