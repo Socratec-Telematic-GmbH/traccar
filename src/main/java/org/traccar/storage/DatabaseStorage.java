@@ -226,6 +226,8 @@ public class DatabaseStorage extends Storage {
             if (condition.getDeviceId() > 0) {
                 results.put("deviceId", condition.getDeviceId());
             }
+        } else if (genericCondition instanceof Condition.Contains condition) {
+            results.put(condition.getColumn(), "%" + condition.getValue().toLowerCase() + "%");
         }
         return results;
     }
@@ -283,6 +285,13 @@ public class DatabaseStorage extends Storage {
                     result.append(" WHERE id = :deviceId");
                 }
                 result.append(")");
+
+            } else if (genericCondition instanceof Condition.Contains condition) {
+
+                result.append("LOWER(");
+                result.append(condition.getColumn());
+                result.append(") LIKE :");
+                result.append(condition.getColumn());
 
             }
         }

@@ -25,6 +25,8 @@ security:
   - BasicAuth: []
   - ApiKey: []
 tags:
+  - name: Geofences
+    description: Geofence search and filtering extensions
   - name: Trips
     description: Trip management and logbook functionality
   - name: Reports
@@ -32,6 +34,81 @@ tags:
   - name: Carriers
     description: Carrier management for vessel and vehicle tracking
 paths:
+  /geofences:
+    get:
+      summary: Fetch a list of Geofences (extended with filter)
+      description: |
+        Returns a list of Geofences the user has access to.
+        Extends the standard Traccar `/geofences` endpoint with an optional `filter` query parameter
+        that performs a case-insensitive substring search on the geofence **name** field.
+        
+        When `filter` is provided, only geofences whose name contains the filter string
+        (case-insensitive) are returned. The filter is applied in addition to the standard
+        permission and ownership conditions.
+      tags:
+        - Geofences
+      parameters:
+        - name: all
+          in: query
+          description: Can only be used by admins or managers to fetch all entities
+          schema:
+            type: boolean
+        - name: userId
+          in: query
+          description: Standard users can use this only with their own _userId_
+          schema:
+            type: integer
+            format: int64
+        - name: groupId
+          in: query
+          description: Filter geofences linked to the given group
+          schema:
+            type: integer
+            format: int64
+        - name: deviceId
+          in: query
+          description: Filter geofences linked to the given device
+          schema:
+            type: integer
+            format: int64
+        - name: filter
+          in: query
+          description: |
+            Case-insensitive substring filter applied to the geofence **name**.
+            Returns only geofences whose name contains the provided string.
+            Surrounding double-quote characters are stripped automatically.
+            
+            Example: `filter=warehouse` matches `Main Warehouse`, `warehouse-north`, `WAREHOUSE`.
+          schema:
+            type: string
+          example: warehouse
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Geofence'
+              example:
+                - id: 5
+                  name: "Main Warehouse"
+                  description: "Primary storage facility"
+                  area: "CIRCLE (52.5200 13.4050, 200)"
+                  calendarId: 0
+                - id: 7
+                  name: "warehouse-north"
+                  description: "Northern distribution center"
+                  area: "POLYGON ((52.5300 13.4000, 52.5310 13.4100, 52.5290 13.4100, 52.5300 13.4000))"
+                  calendarId: 0
+        '400':
+          description: No permission
+          content: {}
+        '401':
+          description: Unauthorized - Authentication required
+          content: {}
+
   /trips:
     get:
       summary: Fetch a list of Trips
@@ -1433,6 +1510,48 @@ paths:
           content: {}
 components:
   schemas:
+    Geofence:
+      type: object
+      description: |
+        Represents a geofence (a named geographic boundary) as stored in `tc_geofences`.
+        Extends the standard Traccar Geofence model. The `/geofences` endpoint is extended
+        with a `filter` query parameter for case-insensitive name search.
+      properties:
+        id:
+          type: integer
+          format: int64
+          description: Unique identifier for the geofence
+        name:
+          type: string
+          description: Name of the geofence. The `filter` parameter performs a case-insensitive substring match on this field.
+          example: "Main Warehouse"
+        description:
+          type: string
+          description: Optional description of the geofence
+          nullable: true
+          example: "Primary storage facility"
+        area:
+          type: string
+          description: |
+            Geometry of the geofence in WKT-like format. Supported types:
+            - `CIRCLE (lat lon, radius)` — circular area
+            - `POLYGON ((lat lon, ...))` — polygonal area
+            - `LINESTRING (lat lon, ...)` — polyline corridor
+          example: "CIRCLE (52.5200 13.4050, 200)"
+        calendarId:
+          type: integer
+          format: int64
+          description: ID of the associated calendar (0 if none)
+          default: 0
+        attributes:
+          type: object
+          description: Additional custom attributes as key-value pairs
+          additionalProperties: true
+          nullable: true
+      required:
+        - name
+        - area
+
     Trip:
       type: object
       properties:

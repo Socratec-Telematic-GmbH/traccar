@@ -17,11 +17,13 @@ package org.traccar.api.resource;
 
 import org.traccar.api.ExtendedObjectResource;
 import org.traccar.model.Geofence;
+import org.traccar.storage.query.Condition;
 
 import jakarta.ws.rs.Consumes;
 import jakarta.ws.rs.Path;
 import jakarta.ws.rs.Produces;
 import jakarta.ws.rs.core.MediaType;
+import java.util.Optional;
 
 @Path("geofences")
 @Produces(MediaType.APPLICATION_JSON)
@@ -30,6 +32,17 @@ public class GeofenceResource extends ExtendedObjectResource<Geofence> {
 
     public GeofenceResource() {
         super(Geofence.class, "name");
+    }
+
+    @Override
+    protected Optional<Condition> getCustomFilterCondition(String filter) {
+        if (filter != null && !filter.isEmpty()) {
+            String trimmed = filter.replaceAll("^\"|\"$", "").trim();
+            if (!trimmed.isEmpty()) {
+                return Optional.of(new Condition.Contains("name", trimmed));
+            }
+        }
+        return Optional.empty();
     }
 
 }

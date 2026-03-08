@@ -30,6 +30,7 @@ import jakarta.ws.rs.GET;
 import jakarta.ws.rs.QueryParam;
 import java.util.Collection;
 import java.util.LinkedList;
+import java.util.Optional;
 
 public class ExtendedObjectResource<T extends BaseModel> extends BaseObjectResource<T> {
 
@@ -43,7 +44,8 @@ public class ExtendedObjectResource<T extends BaseModel> extends BaseObjectResou
     @GET
     public Collection<T> get(
             @QueryParam("all") boolean all, @QueryParam("userId") long userId,
-            @QueryParam("groupId") long groupId, @QueryParam("deviceId") long deviceId) throws StorageException {
+            @QueryParam("groupId") long groupId, @QueryParam("deviceId") long deviceId,
+            @QueryParam("filter") String filter) throws StorageException {
 
         var conditions = new LinkedList<Condition>();
 
@@ -69,8 +71,13 @@ public class ExtendedObjectResource<T extends BaseModel> extends BaseObjectResou
             conditions.add(new Condition.Permission(Device.class, deviceId, baseClass).excludeGroups());
         }
 
+        getCustomFilterCondition(filter).ifPresent(conditions::add);
+
         return storage.getObjects(baseClass, new Request(
                 new Columns.All(), Condition.merge(conditions), sortField != null ? new Order(sortField) : null));
     }
 
+    protected Optional<Condition> getCustomFilterCondition(String filter) {
+        return Optional.empty();
+    }
 }
