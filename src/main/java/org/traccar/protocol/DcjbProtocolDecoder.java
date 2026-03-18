@@ -173,7 +173,7 @@ public class DcjbProtocolDecoder extends BaseMqttProtocolDecoder {
     ) throws Exception {
 
         final String[] supportedNames = {
-            "fall", "roam",
+            "fall", "roam", "lading",
             "status",
             "bat",
             "rss", "temp", "press", "humid", "acc", "gyro"
@@ -193,6 +193,12 @@ public class DcjbProtocolDecoder extends BaseMqttProtocolDecoder {
                 if (vals.get(0).intValue() != 0) {
                     position.addAlarm(position.ALARM_FALL_DOWN);
                     debugLog("   -> ALARM: fall");
+                }
+                break;
+            case "lading":
+                if (vals.get(0).intValue() != 0) {
+                    position.addAlarm(position.ALARM_LADING);
+                    debugLog("   -> ALARM: lading");
                 }
                 break;
             case "roam":
