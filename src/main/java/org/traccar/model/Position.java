@@ -128,6 +128,8 @@ public class Position extends Message {
     public static final String ALARM_LOW_SPEED = "lowspeed";
     public static final String ALARM_OVERSPEED = "overspeed";
     public static final String ALARM_FALL_DOWN = "fallDown";
+    // The container/freight/load is being laded.
+    public static final String ALARM_LADING = "lading";
     public static final String ALARM_LOW_POWER = "lowPower";
     public static final String ALARM_LOW_BATTERY = "lowBattery";
     public static final String ALARM_FAULT = "fault";
